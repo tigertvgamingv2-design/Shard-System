@@ -1,0 +1,3 @@
+name: EssentialsNick
+main: com.thronecraft.essentials.chat.nick.NickShard
+category: chat

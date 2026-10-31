@@ -1,0 +1,3 @@
+name: EssentialsReply
+main: com.thronecraft.essentials.chat.reply.ReplyShard
+category: chat

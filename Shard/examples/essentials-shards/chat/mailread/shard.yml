@@ -1,0 +1,3 @@
+name: EssentialsMailRead
+main: com.thronecraft.essentials.chat.mailread.MailReadShard
+category: chat

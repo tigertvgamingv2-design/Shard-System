@@ -1,0 +1,1911 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080c12">
+  <title>Shard Control</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #edf2fb;
+      background: #080c12;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --surface: #101721;
+      --surface-raised: #141d29;
+      --surface-hover: #1a2532;
+      --border: #222e3d;
+      --border-light: #2b394a;
+      --muted: #8290a3;
+      --text-soft: #b7c2d1;
+      --accent: #73e0c1;
+      --accent-strong: #46c5a2;
+      --blue: #83b9ff;
+      --danger: #ff8291;
+      --warning: #f3c878;
+    }
+    * { box-sizing: border-box; }
+    body { min-width: 320px; min-height: 100vh; margin: 0; background: radial-gradient(ellipse at 70% -15%, #16302f 0, transparent 38%), #080c12; }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .hidden { display: none !important; }
+    .login-wrap { width: min(440px, calc(100% - 32px)); margin: min(18vh, 150px) auto 40px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #3c7268; border-radius: 13px; color: var(--accent); background: linear-gradient(145deg, #193c38, #10211f); font-size: 19px; font-weight: 800; box-shadow: 0 8px 26px #45c8a314; }
+    .brand-name { font-size: 15px; font-weight: 750; letter-spacing: -.02em; }
+    .brand-caption { margin-top: 3px; color: var(--muted); font-size: 11px; letter-spacing: .13em; text-transform: uppercase; }
+    .login-card { margin-top: 28px; padding: 30px; border: 1px solid var(--border); border-radius: 18px; background: linear-gradient(150deg, #131c27, #0d131b); box-shadow: 0 24px 80px #0007; }
+    .login-card h1 { margin: 0; font-size: 25px; letter-spacing: -.04em; }
+    .login-card > p { margin: 9px 0 24px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+    code { color: #b9d1cb; font-family: "SFMono-Regular", Consolas, monospace; font-size: .9em; }
+    label { display: block; margin: 0 0 8px; color: var(--text-soft); font-size: 12px; font-weight: 650; }
+    .field, select { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid var(--border-light); border-radius: 9px; color: #edf2fb; background: #0b1118; }
+    .field::placeholder { color: #637184; }
+    .login-error { min-height: 20px; margin: 10px 0; color: var(--danger); font-size: 12px; }
+    .button { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border-light); border-radius: 9px; color: #dce5f1; background: #172230; cursor: pointer; font-size: 12px; font-weight: 650; transition: background .16s ease, border-color .16s ease, transform .16s ease; }
+    .button:hover { border-color: #43566c; background: #202e3d; }
+    .button:active { transform: translateY(1px); }
+    .button:disabled { opacity: .55; cursor: wait; }
+    .button.primary { border-color: #49b89a; color: #071510; background: var(--accent); }
+    .button.primary:hover { border-color: #83efd1; background: #8aecd1; }
+    .button.subtle { border-color: transparent; background: transparent; }
+    .button.danger { border-color: #633540; color: #ff9aa5; background: #321c24; }
+    .button.danger:hover { border-color: #8b4552; background: #45232e; }
+    .login-card .button { width: 100%; min-height: 44px; margin-top: 4px; }
+    .app-shell { display: grid; min-height: 100vh; grid-template-columns: 248px minmax(0, 1fr); }
+    .sidebar { position: sticky; top: 0; display: flex; height: 100vh; flex-direction: column; padding: 26px 16px 18px; border-right: 1px solid #1c2733; background: #0b1017eF; }
+    .sidebar .brand { padding: 0 9px 31px; }
+    .nav-label { margin: 3px 11px 9px; color: #657387; font-size: 10px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+    .nav-list { display: grid; gap: 5px; }
+    .nav-item { display: flex; width: 100%; min-height: 42px; align-items: center; gap: 12px; padding: 0 12px; border: 1px solid transparent; border-radius: 9px; color: #9aa8b9; background: transparent; cursor: pointer; text-align: left; font-size: 13px; font-weight: 600; }
+    .nav-item:hover { color: #e7eef7; background: #121b26; }
+    .nav-item[aria-current="page"] { border-color: #285047; color: #9af0d5; background: linear-gradient(90deg, #18302c, #13221f); }
+    .nav-icon { display: grid; width: 20px; place-items: center; color: #7f91a5; font-size: 14px; }
+    .nav-item[aria-current="page"] .nav-icon { color: var(--accent); }
+    .sidebar-bottom { margin-top: auto; }
+    .server-mini { padding: 13px; border: 1px solid var(--border); border-radius: 12px; background: #101721; }
+    .server-mini-line { display: flex; align-items: center; gap: 8px; color: #cad4e0; font-size: 12px; font-weight: 650; }
+    .server-mini small { display: block; margin: 8px 0 0 17px; color: var(--muted); font-size: 11px; }
+    .sidebar-note { padding: 14px 8px 0; color: #58677a; font-size: 10px; }
+    .main-column { min-width: 0; }
+    .topbar { position: sticky; z-index: 4; top: 0; display: flex; min-height: 68px; align-items: center; justify-content: space-between; gap: 14px; padding: 0 clamp(20px, 4vw, 56px); border-bottom: 1px solid #1c2733; background: #0b1017eF; backdrop-filter: blur(18px); }
+    .breadcrumb { color: var(--muted); font-size: 12px; }
+    .breadcrumb strong { margin-left: 7px; color: #e5ecf5; font-weight: 650; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .live-pill, .badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border: 1px solid #29483f; border-radius: 999px; color: #a4e7d0; background: #11221e; font-size: 10px; font-weight: 700; letter-spacing: .03em; }
+    .dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px #73e0c1a8; }
+    .dot.offline { background: var(--danger); box-shadow: 0 0 10px #ff82918a; }
+    .last-updated { color: #758398; font-size: 11px; }
+    .content { width: min(1440px, 100%); margin: 0 auto; padding: 34px clamp(20px, 4vw, 56px) 48px; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 25px; }
+    .eyebrow { margin-bottom: 8px; color: var(--accent); font-size: 10px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
+    .page-heading h1 { margin: 0; font-size: clamp(24px, 3vw, 31px); font-weight: 730; letter-spacing: -.045em; }
+    .page-heading p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+    .page-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .notice { position: sticky; z-index: 3; top: 78px; display: none; margin: -8px 0 18px; padding: 11px 14px; border: 1px solid #75633a; border-radius: 10px; color: #f4d999; background: #241e12; font-size: 12px; }
+    .notice.show { display: block; }
+    .notice.error { border-color: #673843; color: #ffadb6; background: #29171e; }
+    .view { display: none; }
+    .view.active { display: block; animation: enter .2s ease-out; }
+    @keyframes enter { from { opacity: .5; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 16px; }
+    .card { min-width: 0; border: 1px solid var(--border); border-radius: 13px; background: linear-gradient(145deg, #121b26, #0f151e); box-shadow: 0 10px 35px #00000012; }
+    .stat-card { position: relative; overflow: hidden; min-height: 143px; padding: 18px; }
+    .stat-card::after { position: absolute; top: -40px; right: -40px; width: 100px; height: 100px; border-radius: 50%; background: #73e0c108; content: ""; filter: blur(3px); }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 11px; font-weight: 650; }
+    .stat-symbol { display: grid; width: 27px; height: 27px; place-items: center; border: 1px solid var(--border-light); border-radius: 8px; color: var(--accent); background: #17251f; font-size: 12px; }
+    .stat-value { margin-top: 15px; font-size: 27px; font-weight: 730; letter-spacing: -.045em; }
+    .stat-foot { margin-top: 4px; color: #748297; font-size: 11px; }
+    .progress { height: 5px; overflow: hidden; margin-top: 14px; border-radius: 99px; background: #26313e; }
+    .progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #50c8a5, #9af0d5); transition: width .3s ease; }
+    .two-column { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .85fr); gap: 14px; margin-bottom: 14px; }
+    .panel { padding: 19px; }
+    .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+    .panel-heading h2 { margin: 0; font-size: 14px; font-weight: 680; letter-spacing: -.015em; }
+    .panel-subtitle { margin-top: 5px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .player-list { display: flex; min-height: 72px; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
+    .player-chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px 7px 7px; border: 1px solid #2b3948; border-radius: 9px; color: #ced8e5; background: #151f2a; font-size: 11px; }
+    .player-avatar { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 7px; color: #10211c; background: linear-gradient(135deg, #95ead0, #65cdb0); font-size: 10px; font-weight: 800; }
+    .empty-state { display: grid; min-height: 72px; place-items: center; color: #748297; font-size: 12px; text-align: center; }
+    .health-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #202b38; color: #aeb9c8; font-size: 12px; }
+    .health-row:last-child { padding-bottom: 0; border-bottom: 0; }
+    .health-value { display: inline-flex; align-items: center; gap: 7px; color: #cbd6e3; font-weight: 650; }
+    .health-value .dot { width: 6px; height: 6px; }
+    .split-bottom { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 14px; }
+    .mini-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .mini-metric { padding: 12px; border: 1px solid #253140; border-radius: 10px; background: #111923; }
+    .mini-metric span { display: block; color: var(--muted); font-size: 10px; }
+    .mini-metric strong { display: block; margin-top: 7px; color: #e2eaf4; font-size: 16px; letter-spacing: -.025em; }
+    .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .quick-actions .button { flex: 1; }
+    .admin-overview-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 14px; margin-top: 14px; }
+    .overview-activity, .overview-shards { display: grid; gap: 9px; }
+    .overview-activity-row, .overview-shard-row { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 11px; border: 1px solid #253140; border-radius: 9px; background: #111923; }
+    .overview-activity-main, .overview-shard-main { min-width: 0; }
+    .overview-activity-main strong, .overview-shard-main strong { display: block; overflow: hidden; color: #dce5f1; font-size: 11px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .overview-activity-main span, .overview-shard-main span { display: block; margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .overview-activity-meta { flex: none; color: #a9bad0; font-size: 10px; text-align: right; }
+    .overview-shard-row .state-badge { flex: none; }
+    .overview-empty { padding: 15px 4px; color: #748297; font-size: 11px; text-align: center; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+    .toolbar-field { min-width: 180px; flex: 1; }
+    .toolbar-field select { min-height: 38px; padding: 8px 10px; font-size: 12px; }
+    .toolbar-field .field { min-height: 38px; padding: 8px 10px; font-size: 12px; }
+    .table-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0 10px; }
+    .table-count { color: var(--muted); font-size: 11px; }
+    .search { width: min(260px, 100%); min-height: 36px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 9px; color: #eaf0f8; background: #0b1118; font-size: 11px; }
+    .table-wrap { overflow-x: auto; border: 1px solid #202b38; border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 11px; }
+    th { padding: 11px 12px; color: #738297; background: #111923; font-size: 10px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+    td { padding: 11px 12px; border-top: 1px solid #1f2a37; color: #bdc8d6; vertical-align: middle; }
+    tbody tr:hover { background: #151e29; }
+    .table-empty { padding: 26px 12px; color: #748297; text-align: center; }
+    .shard-name { color: #e1e9f3; font-weight: 650; }
+    .file-name { color: #8290a3; font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; }
+    .state-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid #29483f; border-radius: 99px; color: #9fe3c9; background: #13231f; font-size: 10px; font-weight: 700; }
+    .state-badge.disabled { border-color: #4a3c31; color: #dbb987; background: #251f19; }
+    .action-cell { min-width: 225px; white-space: nowrap; }
+    .action-cell .button { min-height: 30px; padding: 5px 8px; margin: 2px; font-size: 10px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .summary-card { padding: 16px 17px; }
+    .summary-label { color: var(--muted); font-size: 11px; }
+    .summary-value { margin-top: 8px; color: #e5edf7; font-size: 22px; font-weight: 720; letter-spacing: -.035em; }
+    .summary-note { margin-top: 4px; color: #728196; font-size: 10px; }
+    .transaction-action { display: inline-flex; align-items: center; gap: 6px; color: #b4c3d4; }
+    .transaction-action::before { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); content: ""; }
+    .restart-card { padding: 22px; }
+    .restart-state { display: flex; align-items: center; gap: 12px; margin: 17px 0 22px; padding: 14px; border: 1px solid #253443; border-radius: 11px; background: #101923; }
+    .restart-state-icon { display: grid; width: 36px; height: 36px; flex: none; place-items: center; border: 1px solid #31534a; border-radius: 10px; color: var(--accent); background: #172b26; font-size: 16px; }
+    .restart-state strong { display: block; color: #dfe8f3; font-size: 12px; }
+    .restart-state span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .restart-state .restart-countdown { color: #e8c97e; font-weight: 700; }
+    .restart-state.scheduled { border-color: #554833; background: #1c1914; }
+    .restart-state.scheduled .restart-state-icon { border-color: #6a5835; color: var(--warning); background: #292317; }
+    .restart-form { display: grid; max-width: 660px; grid-template-columns: minmax(200px, 1fr) auto auto; align-items: end; gap: 9px; }
+    .restart-form .field { min-height: 40px; }
+    .restart-presets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 14px; color: var(--muted); font-size: 11px; }
+    .restart-presets .button { min-width: 48px; }
+    .custom-restart-delay { display: flex; flex: 1; min-width: 250px; align-items: flex-end; gap: 7px; margin-left: 6px; }
+    .custom-restart-delay label { flex: none; margin-bottom: 12px; }
+    .custom-restart-delay .field { width: 110px; min-height: 36px; padding: 7px 9px; font-size: 11px; }
+    .custom-restart-delay .button { min-height: 36px; }
+    .helper { margin: 14px 0 0; color: #728196; font-size: 11px; line-height: 1.6; }
+    .footer { margin-top: 26px; padding-top: 15px; border-top: 1px solid #1b2632; color: #58677a; font-size: 10px; }
+    .login-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 20px 0 17px; padding: 4px; border: 1px solid var(--border); border-radius: 10px; background: #0b1118; }
+    .login-tab { min-height: 34px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; cursor: pointer; font-size: 11px; font-weight: 650; }
+    .login-tab.active { color: #e7f2ef; background: #1a2a2a; }
+    .login-help { margin: 10px 0 0 !important; color: var(--muted); font-size: 11px !important; line-height: 1.6 !important; }
+    .user-cell { display: flex; align-items: center; gap: 9px; }
+    .role-tag { display: inline-flex; padding: 5px 8px; border: 1px solid #354153; border-radius: 99px; color: #b7c5d6; background: #18212d; font-size: 10px; font-weight: 700; }
+    .role-tag.admin { border-color: #514832; color: #edcc86; background: #282317; }
+    .role-tag.moderator { border-color: #3a4f6c; color: #a9cbf4; background: #182435; }
+    .online-tag { display: inline-flex; align-items: center; gap: 6px; color: #a6e4cc; font-size: 11px; }
+    .player-actions { min-width: 220px; white-space: nowrap; }
+    .player-actions .button { min-height: 30px; margin: 2px; padding: 5px 8px; font-size: 10px; }
+    .console-warning { margin: 0 0 14px; padding: 12px 14px; border: 1px solid #63512f; border-radius: 10px; color: #eed59f; background: #241e13; font-size: 11px; line-height: 1.6; }
+    .settings-card { padding: 20px; }
+    .settings-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .settings-fields .wide { grid-column: 1 / -1; }
+    .settings-card .button { margin-top: 14px; }
+    .permission-effective { margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .console-output { min-height: 300px; max-height: 55vh; overflow: auto; margin: 0; padding: 14px; border: 1px solid #202b38; border-radius: 10px; color: #b7c9bd; background: #080d12; font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .console-form { display: flex; gap: 9px; margin-top: 12px; }
+    .console-form .field { font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; }
+    .command-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 9px; margin: 14px 0; }
+    .command-tools .field, .command-tools select { min-height: 38px; padding: 8px 10px; font-size: 12px; }
+    .command-tools .custom-item-field { grid-column: 1 / -1; }
+    .command-tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+    .command-tile { min-height: 55px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 5px; padding: 9px 10px; text-align: left; }
+    .command-tile span { color: #7f91a5; font-family: "SFMono-Regular", Consolas, monospace; font-size: 9px; font-weight: 500; }
+    .command-tile strong { font-size: 11px; font-weight: 650; }
+    .world-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .world-card { padding: 18px; }
+    .world-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .world-detail { padding: 10px; border: 1px solid #253140; border-radius: 9px; background: #111923; }
+    .world-detail span { display: block; color: var(--muted); font-size: 10px; }
+    .world-detail strong { display: block; margin-top: 5px; overflow: hidden; color: #e2eaf4; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .world-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+    .world-actions .button { min-height: 31px; padding: 6px 9px; font-size: 10px; }
+    .world-difficulty { display: flex; flex: 1; min-width: 180px; align-items: flex-end; gap: 7px; }
+    .world-difficulty > div { flex: 1; }
+    .world-difficulty select { min-height: 31px; padding: 5px 8px; font-size: 10px; }
+    .player-tools-layout { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 14px; }
+    .player-tool-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .player-tool-actions .button { min-height: 42px; }
+    .player-tool-selects { display: grid; gap: 13px; }
+    .player-tool-selects select { min-height: 40px; }
+    .action-dialog { width: min(440px, calc(100% - 28px)); padding: 22px; border: 1px solid #354354; border-radius: 15px; color: #edf2fb; background: #111923; box-shadow: 0 24px 90px #000b; }
+    .action-dialog::backdrop { background: #02060bc9; backdrop-filter: blur(4px); }
+    .action-dialog h2 { margin: 0; font-size: 17px; letter-spacing: -.025em; }
+    .action-dialog p { margin: 8px 0 18px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
+    #console-command-preview { overflow-wrap: anywhere; color: #c4ddce; font-family: "SFMono-Regular", Consolas, monospace; }
+    @media (max-width: 1050px) {
+      .app-shell { grid-template-columns: 218px minmax(0, 1fr); }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .two-column, .split-bottom { grid-template-columns: minmax(0, 1fr); }
+      .admin-overview-grid { grid-template-columns: minmax(0, 1fr); }
+      .world-list { grid-template-columns: minmax(0, 1fr); }
+      .player-tools-layout { grid-template-columns: minmax(0, 1fr); }
+      .two-column.settings-layout { grid-template-columns: minmax(0, 1fr); }
+      .command-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 700px) {
+      .app-shell { display: block; }
+      .sidebar { position: sticky; z-index: 5; top: 0; height: auto; padding: 12px 14px 0; border-right: 0; border-bottom: 1px solid #1c2733; }
+      .sidebar .brand { padding: 0 3px 12px; }
+      .brand-mark { width: 34px; height: 34px; border-radius: 10px; }
+      .nav-label, .sidebar-bottom { display: none; }
+      .nav-list { display: flex; overflow-x: auto; gap: 4px; padding-bottom: 9px; scrollbar-width: thin; }
+      .nav-item { width: auto; min-height: 35px; flex: none; gap: 7px; padding: 0 10px; font-size: 11px; }
+      .nav-icon { width: auto; font-size: 12px; }
+      .topbar { position: static; min-height: 54px; padding: 0 16px; }
+      .breadcrumb { white-space: nowrap; font-size: 10px; }
+      .breadcrumb-root { display: none; }
+      .breadcrumb strong { margin-left: 0; }
+      .top-actions { gap: 4px; }
+      .top-actions #refresh { padding: 7px; }
+      .top-actions #refresh span { display: none; }
+      .content { padding: 23px 16px 35px; }
+      .page-heading { align-items: flex-start; }
+      .last-updated { display: none; }
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 460px) {
+      .stats-grid { gap: 9px; }
+      .stat-card { min-height: 130px; padding: 13px; }
+      .stat-value { font-size: 23px; }
+      .page-heading { flex-direction: column; }
+      .page-actions { width: 100%; }
+      .page-actions .button { flex: 1; }
+      .restart-form { grid-template-columns: 1fr 1fr; }
+      .restart-form > div { grid-column: 1 / -1; }
+      .restart-form .button { width: 100%; }
+      .mini-metrics { gap: 6px; }
+      .mini-metric { padding: 10px 8px; }
+      .mini-metric strong { font-size: 14px; }
+      .panel { padding: 15px; }
+      .live-pill { padding: 5px 7px; }
+      .console-form { align-items: stretch; flex-direction: column; }
+      .command-tools { grid-template-columns: 1fr 1fr; }
+      .command-tools > button { grid-column: 1 / -1; }
+      .command-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main id="login" class="login-wrap">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">S</div>
+      <div><div class="brand-name">Shard Control</div><div class="brand-caption">Server management</div></div>
+    </div>
+    <section class="login-card">
+      <h1>Welcome back</h1>
+      <p>Sign in with your Minecraft staff account, or use the server owner password.</p>
+      <div class="login-tabs" role="tablist" aria-label="Sign-in method">
+        <button id="staff-login-tab" class="login-tab active" type="button" role="tab" aria-selected="true">Staff account</button>
+        <button id="owner-login-tab" class="login-tab" type="button" role="tab" aria-selected="false">Owner password</button>
+      </div>
+      <form id="login-form">
+        <div id="staff-login-fields">
+          <label for="link-code">One-time staff code</label>
+          <input class="field" id="link-code" type="text" autocomplete="one-time-code" autocapitalize="off" spellcheck="false" placeholder="Create one in-game with /shard dashboard link" required>
+          <p class="login-help">Codes expire after five minutes. Staff roles come from your server permissions.</p>
+        </div>
+        <div id="owner-login-fields" class="hidden">
+          <label for="password">Dashboard owner password</label>
+          <input class="field" id="password" type="password" autocomplete="current-password" placeholder="Enter the server dashboard password">
+          <p class="login-help">The owner password provides full admin access.</p>
+        </div>
+        <p id="login-notice" class="login-error" role="status" aria-live="polite"></p>
+        <button class="button primary" type="submit">Sign in to dashboard <span aria-hidden="true">→</span></button>
+      </form>
+      <p style="margin:18px 0 0;font-size:11px">Owner password file: <code>plugins/Shard/dashboard.password</code>.</p>
+    </section>
+  </main>
+
+  <div id="dashboard" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div><div class="brand-name">Shard Control</div><div class="brand-caption">Server management</div></div>
+      </div>
+      <div class="nav-label">Workspace</div>
+      <nav class="nav-list" aria-label="Dashboard sections">
+        <button class="nav-item" type="button" data-view="overview" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span>Overview</button>
+        <button class="nav-item" type="button" data-view="players"><span class="nav-icon" aria-hidden="true">♟</span>Players &amp; staff</button>
+        <button class="nav-item admin-only" type="button" data-view="player-tools"><span class="nav-icon" aria-hidden="true">✦</span>Player tools</button>
+        <button class="nav-item admin-only" type="button" data-view="worlds"><span class="nav-icon" aria-hidden="true">◎</span>Worlds</button>
+        <button class="nav-item admin-only" type="button" data-view="shards"><span class="nav-icon" aria-hidden="true">◈</span>Shards</button>
+        <button class="nav-item admin-only" type="button" data-view="economy"><span class="nav-icon" aria-hidden="true">↗</span>Economy</button>
+        <button class="nav-item admin-only" type="button" data-view="maintenance"><span class="nav-icon" aria-hidden="true">◷</span>Maintenance</button>
+        <button class="nav-item admin-only" type="button" data-view="console"><span class="nav-icon" aria-hidden="true">⌘</span>Console</button>
+        <button class="nav-item admin-only" type="button" data-view="permissions"><span class="nav-icon" aria-hidden="true">✓</span>Permissions</button>
+        <button class="nav-item admin-only" type="button" data-view="configuration"><span class="nav-icon" aria-hidden="true">⚙</span>Configuration</button>
+        <button class="nav-item admin-only" type="button" data-view="health"><span class="nav-icon" aria-hidden="true">▤</span>Health</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="server-mini">
+          <div class="server-mini-line"><span id="sidebar-dot" class="dot"></span><span id="sidebar-status">Server online</span></div>
+          <small id="sidebar-version">Waiting for server data</small>
+        </div>
+        <div class="sidebar-note">Shard Admin · Live server controls</div>
+      </div>
+    </aside>
+
+    <div class="main-column">
+      <header class="topbar">
+        <div class="breadcrumb"><span class="breadcrumb-root">Workspace</span><strong id="breadcrumb-current">Overview</strong></div>
+        <div class="top-actions">
+          <span class="live-pill"><span class="dot" aria-hidden="true"></span>LIVE</span>
+          <span id="current-role" class="badge">Staff</span>
+          <span id="last-updated" class="last-updated">Connecting…</span>
+          <button id="refresh" class="button subtle" type="button" aria-label="Refresh dashboard">↻ <span>Refresh</span></button>
+          <button id="logout" class="button subtle" type="button">Log out</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div id="notice" class="notice" role="status" aria-live="polite"></div>
+        <section id="overview" class="view active" aria-labelledby="overview-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Server overview</div><h1 id="overview-title">Your server at a glance</h1><p id="overview-description">Live health, players, and shard activity in one place.</p></div>
+            <div class="page-actions"><button class="button admin-only" type="button" data-go="shards">Manage shards <span aria-hidden="true">→</span></button></div>
+          </div>
+          <div class="stats-grid">
+            <article class="card stat-card">
+              <div class="stat-top"><span>Online players</span><span class="stat-symbol" aria-hidden="true">♟</span></div>
+              <div id="player-total" class="stat-value">—</div><div id="player-capacity" class="stat-foot">Waiting for server data</div>
+              <div class="progress" role="progressbar" aria-label="Player capacity" aria-valuemin="0" aria-valuemax="100"><span id="player-progress"></span></div>
+            </article>
+            <article class="card stat-card admin-only">
+              <div class="stat-top"><span>Loaded shards</span><span class="stat-symbol" aria-hidden="true">◈</span></div>
+              <div id="shard-count" class="stat-value">—</div><div id="shard-state" class="stat-foot">Waiting for shard data</div>
+            </article>
+            <article class="card stat-card">
+              <div class="stat-top"><span>Server uptime</span><span class="stat-symbol" aria-hidden="true">◷</span></div>
+              <div id="uptime" class="stat-value">—</div><div id="server-version" class="stat-foot">Waiting for server data</div>
+            </article>
+            <article class="card stat-card">
+              <div class="stat-top"><span>Memory in use</span><span class="stat-symbol" aria-hidden="true">▤</span></div>
+              <div id="memory" class="stat-value">—</div><div id="memory-max" class="stat-foot">Heap utilization</div>
+              <div class="progress" role="progressbar" aria-label="Memory usage" aria-valuemin="0" aria-valuemax="100"><span id="memory-progress"></span></div>
+            </article>
+          </div>
+          <div class="two-column">
+            <section class="card panel">
+              <div class="panel-heading"><div><h2>Players online</h2><div class="panel-subtitle">Currently connected to your server</div></div><span id="player-count-badge" class="badge">— online</span></div>
+              <div id="player-list" class="player-list"><div class="empty-state">Loading player list…</div></div>
+            </section>
+            <section class="card panel">
+              <div class="panel-heading"><div><h2>System health</h2><div class="panel-subtitle">Current server status</div></div></div>
+              <div class="health-row"><span>Server status</span><span class="health-value"><span class="dot"></span>Online</span></div>
+              <div class="health-row admin-only"><span>Shard services</span><span id="health-shards" class="health-value">—</span></div>
+              <div class="health-row"><span>Memory usage</span><span id="health-memory" class="health-value">—</span></div>
+              <div class="health-row admin-only"><span>Planned restart</span><span id="health-restart" class="health-value">None</span></div>
+            </section>
+          </div>
+          <div class="split-bottom">
+            <section class="card panel admin-only">
+              <div class="panel-heading"><div><h2>Activity snapshot</h2><div class="panel-subtitle">Recent economy activity from the latest 200 records</div></div><button class="button subtle" type="button" data-go="economy">View log →</button></div>
+              <div class="mini-metrics">
+                <div class="mini-metric"><span>Transactions</span><strong id="overview-transactions">—</strong></div>
+                <div class="mini-metric"><span>Recent volume</span><strong id="overview-volume">—</strong></div>
+                <div class="mini-metric"><span>Unique actors</span><strong id="overview-actors">—</strong></div>
+              </div>
+            </section>
+            <section class="card panel admin-only">
+              <div class="panel-heading"><div><h2>Quick actions</h2><div class="panel-subtitle">Common server operations</div></div></div>
+              <div class="quick-actions">
+                <button class="button" type="button" data-go="shards">Manage shards</button>
+                <button class="button" type="button" data-go="maintenance">Plan restart</button>
+                <button class="button" type="button" data-go="players">Players &amp; staff</button>
+                <button class="button" type="button" data-go="player-tools">Player tools</button>
+                <button class="button" type="button" data-go="worlds">World control</button>
+                <button class="button" type="button" data-go="console">Open console</button>
+              </div>
+            </section>
+          </div>
+          <div class="admin-overview-grid admin-only">
+            <section class="card panel">
+              <div class="panel-heading"><div><h2>Recent economy activity</h2><div class="panel-subtitle">Latest transactions recorded by the server</div></div><button class="button subtle" type="button" data-go="economy">View audit log →</button></div>
+              <div id="overview-activity-list" class="overview-activity"><div class="overview-empty">Loading activity…</div></div>
+            </section>
+            <section class="card panel">
+              <div class="panel-heading"><div><h2>Shard fleet</h2><div class="panel-subtitle">Loaded services and current state</div></div><span id="overview-shard-summary" class="badge">— loaded</span></div>
+              <div id="overview-shard-list" class="overview-shards"><div class="overview-empty">Loading shard status…</div></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="players" class="view" aria-labelledby="players-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Community</div><h1 id="players-title">Players &amp; staff</h1><p>Review online players and take moderation actions based on your staff role.</p></div>
+            <div class="page-actions"><span id="online-player-count" class="badge">— online</span></div>
+          </div>
+          <section class="card panel">
+            <div class="panel-heading"><div><h2>Online players</h2><div class="panel-subtitle">Staff roles are assigned through your server's permission manager.</div></div></div>
+            <div class="table-tools"><span id="user-table-count" class="table-count">Loading players…</span><input id="player-search" class="search" type="search" placeholder="Search players…" aria-label="Search online players"></div>
+            <div class="table-wrap"><table><thead><tr><th>Player</th><th>Role</th><th>World / mode</th><th>Location / health</th><th>Muted</th><th>Moderation</th></tr></thead><tbody id="users-table"></tbody></table></div>
+          </section>
+          <p class="helper">To assign staff roles, use your existing permissions plugin: <code>shard.dashboard.moderator</code> or <code>shard.dashboard.admin</code>. Admins inherit Moderator access.</p>
+        </section>
+
+        <section id="player-tools" class="view admin-only" aria-labelledby="player-tools-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Live administration</div><h1 id="player-tools-title">Player tools</h1><p>Apply common support actions to online players without typing console commands.</p></div>
+            <div class="page-actions"><span id="player-tools-count" class="badge">— online</span></div>
+          </div>
+          <div class="player-tools-layout">
+            <section class="card panel">
+              <div class="panel-heading"><div><h2>Teleport players</h2><div class="panel-subtitle">Move a player to another online player or to their current world's spawn.</div></div></div>
+              <div class="player-tool-selects">
+                <div><label for="tool-target">Player to move</label><select id="tool-target"></select></div>
+                <div><label for="tool-destination">Destination player</label><select id="tool-destination"></select></div>
+                <button id="teleport-player" class="button primary" type="button">Teleport to player</button>
+                <button id="teleport-spawn" class="button" type="button">Teleport to world spawn</button>
+              </div>
+            </section>
+            <section class="card panel">
+              <div class="panel-heading"><div><h2>Player support</h2><div class="panel-subtitle">Restore basic status or change a player's game mode.</div></div></div>
+              <div class="player-tool-selects">
+                <div><label for="tool-action-target">Player</label><select id="tool-action-target"></select></div>
+                <div class="player-tool-actions">
+                  <button class="button" type="button" data-player-action="heal">Heal</button>
+                  <button class="button" type="button" data-player-action="feed">Feed</button>
+                  <button class="button" type="button" data-player-action="clear-effects">Clear potion effects</button>
+                  <button class="button" type="button" data-player-action="gamemode" data-value="SURVIVAL">Survival mode</button>
+                  <button class="button" type="button" data-player-action="gamemode" data-value="CREATIVE">Creative mode</button>
+                  <button class="button" type="button" data-player-action="gamemode" data-value="ADVENTURE">Adventure mode</button>
+                  <button class="button" type="button" data-player-action="gamemode" data-value="SPECTATOR">Spectator mode</button>
+                </div>
+              </div>
+            </section>
+          </div>
+          <p class="helper">Actions are restricted to online players and available only to dashboard admins. Changes take effect immediately.</p>
+        </section>
+
+        <section id="worlds" class="view admin-only" aria-labelledby="worlds-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">World management</div><h1 id="worlds-title">Worlds &amp; environment</h1><p>Inspect loaded worlds and manage each world's time, weather, difficulty, and saved state.</p></div>
+            <div class="page-actions"><button id="worlds-refresh" class="button" type="button">↻ Refresh worlds</button></div>
+          </div>
+          <div class="summary-grid">
+            <article class="card summary-card"><div class="summary-label">Loaded worlds</div><div id="world-count" class="summary-value">—</div><div class="summary-note">Worlds currently loaded by the server</div></article>
+            <article class="card summary-card"><div class="summary-label">Players across worlds</div><div id="world-player-count" class="summary-value">—</div><div class="summary-note">Connected players grouped by world</div></article>
+            <article class="card summary-card"><div class="summary-label">Active weather</div><div id="world-weather-count" class="summary-value">—</div><div class="summary-note">Worlds with rain or thunder</div></article>
+          </div>
+          <div id="world-list" class="world-list"><div class="card panel empty-state">Loading world information…</div></div>
+          <p class="helper">Time and weather changes apply only to the selected world. World saves can cause a brief performance pause on large worlds.</p>
+        </section>
+
+        <section id="console" class="view admin-only" aria-labelledby="console-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Server operations</div><h1 id="console-title">Console</h1><p>Review recent server logs and run commands with server-console privileges.</p></div>
+            <div class="page-actions"><button id="console-refresh" class="button" type="button">↻ Refresh logs</button></div>
+          </div>
+          <section class="card panel">
+            <div class="console-warning"><strong>Admin-only console.</strong> Commands run as the server console with full permissions. Only run commands you trust; destructive actions can immediately affect the live server.</div>
+            <div class="panel-heading"><div><h2>Player item controls</h2><div class="panel-subtitle">Give or clear a selected item for one Minecraft player.</div></div><span class="badge">25 items</span></div>
+            <div class="command-tools">
+              <div><label for="item-target">Target player</label><input id="item-target" class="field" type="text" maxlength="16" autocomplete="off" placeholder="Minecraft username" pattern="[A-Za-z0-9_]{1,16}" required></div>
+              <div><label for="item-name">Minecraft item</label><select id="item-name"></select></div>
+              <button id="custom-item-toggle" class="button" type="button" aria-pressed="false">Custom item</button>
+              <div><label for="item-amount">Give amount</label><input id="item-amount" class="field" type="number" min="1" max="64" value="1"></div>
+              <div id="custom-item-field" class="custom-item-field hidden"><label for="custom-item-name">Custom item ID</label><input id="custom-item-name" class="field" type="text" maxlength="128" autocomplete="off" placeholder="minecraft:diamond_block" aria-describedby="custom-item-help"><div id="custom-item-help" class="panel-subtitle">Use a Minecraft item ID, such as <code>minecraft:diamond_block</code> or <code>modid:custom_item</code>.</div></div>
+              <button id="give-item" class="button primary" type="button">Give item</button>
+              <button id="clear-item" class="button danger" type="button">Clear item</button>
+            </div>
+            <div class="panel-heading" style="margin-top:22px"><div><h2>Quick commands</h2><div class="panel-subtitle">25 common server controls. Player actions use the target above and run immediately.</div></div><span class="badge">25 commands</span></div>
+            <div id="command-tiles" class="command-tiles" aria-label="Quick server commands"></div>
+            <div class="panel-heading"><div><h2>Recent server output</h2><div id="console-updated" class="panel-subtitle">Waiting for log data…</div></div><span class="badge">latest.log · last 200 lines</span></div>
+            <div class="table-tools"><span id="console-match-count" class="table-count">Loading recent lines…</span><input id="console-search" class="search" type="search" placeholder="Filter recent logs…" aria-label="Filter recent console logs"></div>
+            <pre id="console-output" class="console-output" aria-live="polite">Loading server log…</pre>
+            <form id="console-form" class="console-form">
+              <input id="console-command" class="field" type="text" autocomplete="off" maxlength="256" placeholder="Enter a server command, e.g. list" aria-label="Server console command" required>
+              <button id="console-run" class="button primary" type="submit">Send command</button>
+            </form>
+          </section>
+        </section>
+
+        <section id="permissions" class="view admin-only" aria-labelledby="permissions-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Access management</div><h1 id="permissions-title">Player permissions</h1><p>Set persistent allow or deny overrides for registered permission nodes on online players.</p></div>
+            <div class="page-actions"><button id="permissions-refresh" class="button" type="button">↻ Refresh players</button></div>
+          </div>
+          <section class="card settings-card">
+            <form id="permission-form">
+              <div class="settings-fields">
+                <div><label for="permission-player">Online player</label><select id="permission-player" class="field" required></select></div>
+                <div><label for="permission-node">Registered permission</label><select id="permission-node" class="field" required></select></div>
+                <div><label for="permission-mode">Override</label><select id="permission-mode" class="field"><option value="inherit">Inherit normal permissions</option><option value="allow">Allow</option><option value="deny">Deny</option></select></div>
+              </div>
+              <p id="permission-effective" class="permission-effective">Choose a player and permission to inspect its effective value.</p>
+              <button id="permission-save" class="button primary" type="submit">Save permission</button>
+            </form>
+          </section>
+          <p class="helper">Overrides are stored in the Shard configuration and applied while the player is online, including after reconnects. Other permission plugins may also manage permissions; review their rules if the effective result differs.</p>
+        </section>
+
+        <section id="configuration" class="view admin-only" aria-labelledby="configuration-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Server settings</div><h1 id="configuration-title">Safe configuration</h1><p>Edit only the dashboard listener and Shard message prefix.</p></div>
+            <div class="page-actions"><button id="configuration-refresh" class="button" type="button">↻ Reload settings</button></div>
+          </div>
+          <section class="card settings-card">
+            <form id="configuration-form">
+              <div class="settings-fields">
+                <div><label for="config-bind-address">Dashboard bind address</label><input id="config-bind-address" class="field" type="text" maxlength="45" placeholder="127.0.0.1" required></div>
+                <div><label for="config-port">Dashboard port</label><input id="config-port" class="field" type="number" min="1" max="65535" step="1" required></div>
+                <div class="wide"><label for="config-prefix">Shard message prefix</label><input id="config-prefix" class="field" type="text" maxlength="128" placeholder="&amp;8[&amp;bShard&amp;8] &amp;7"></div>
+              </div>
+              <button id="configuration-save" class="button primary" type="submit">Save configuration</button>
+            </form>
+          </section>
+          <p class="helper">Bind address and port changes are saved immediately but take effect after the server or plugin restarts. Use a literal IPv4/IPv6 address assigned to this server, or <code>0.0.0.0</code> for all IPv4 interfaces. The license key is never read or exposed by this editor.</p>
+        </section>
+
+        <section id="health" class="view admin-only" aria-labelledby="health-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Diagnostics</div><h1 id="health-title">Server health</h1><p>Runtime, capacity, and storage measurements from the live server process.</p></div>
+            <div class="page-actions"><button id="health-refresh" class="button" type="button">↻ Refresh health</button></div>
+          </div>
+          <div class="summary-grid">
+            <article class="card summary-card"><div class="summary-label">Online players</div><div id="health-players" class="summary-value">—</div><div class="summary-note">Current connections</div></article>
+            <article class="card summary-card"><div class="summary-label">Loaded worlds</div><div id="health-worlds" class="summary-value">—</div><div class="summary-note">Worlds in memory</div></article>
+            <article class="card summary-card"><div class="summary-label">Enabled shards</div><div id="health-enabled-shards" class="summary-value">—</div><div class="summary-note">Active shard modules</div></article>
+            <article class="card summary-card"><div class="summary-label">Available processors</div><div id="health-processors" class="summary-value">—</div><div class="summary-note">Processors reported to Java</div></article>
+          </div>
+          <div class="two-column settings-layout">
+            <section class="card panel">
+              <div class="panel-heading"><div><h2>Runtime</h2><div class="panel-subtitle">Java and operating system</div></div></div>
+              <div class="health-row"><span>Java version</span><span id="health-java" class="health-value">—</span></div>
+              <div class="health-row"><span>Operating system</span><span id="health-os" class="health-value">—</span></div>
+              <div class="health-row"><span>Shard modules</span><span id="health-loaded-shards" class="health-value">—</span></div>
+            </section>
+            <section class="card panel">
+              <div class="panel-heading"><div><h2>Resource use</h2><div class="panel-subtitle">Java heap and server disk</div></div></div>
+              <div class="health-row"><span>Heap in use</span><span id="health-memory-used" class="health-value">—</span></div>
+              <div class="health-row"><span>Heap allocated</span><span id="health-memory-allocated" class="health-value">—</span></div>
+              <div class="health-row"><span>Heap maximum</span><span id="health-memory-max" class="health-value">—</span></div>
+              <div class="health-row"><span>Free disk space</span><span id="health-disk" class="health-value">—</span></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="shards" class="view admin-only" aria-labelledby="shards-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Extensions</div><h1 id="shards-title">Shard management</h1><p>Load, enable, disable, reload, or unload your server shards.</p></div>
+            <div class="page-actions"><button id="reload-all" class="button" type="button">↻ Reload all</button></div>
+          </div>
+          <section class="card panel">
+            <div class="panel-heading"><div><h2>Load a shard</h2><div class="panel-subtitle">Validate and load an available JAR from your shard folder.</div></div></div>
+            <div class="toolbar">
+              <div class="toolbar-field"><label for="available">Available shard JAR</label><select id="available"></select></div>
+              <button id="load" class="button primary" type="button">Validate and load</button>
+            </div>
+          </section>
+          <section class="card panel">
+            <div class="panel-heading"><div><h2>Installed shards</h2><div class="panel-subtitle">Manage the shards currently loaded by the server.</div></div><span id="shard-count-badge" class="badge">— loaded</span></div>
+            <div class="table-tools"><span id="shard-table-count" class="table-count">Loading shards…</span><div class="toolbar-field" style="max-width:190px"><label for="shard-filter">Filter state</label><select id="shard-filter"><option value="all">All states</option><option value="enabled">Enabled</option><option value="disabled">Disabled</option></select></div><input id="shard-search" class="search" type="search" placeholder="Search shards…" aria-label="Search shards"></div>
+            <div class="table-wrap"><table><thead><tr><th>Shard</th><th>JAR file</th><th>Status</th><th>Actions</th></tr></thead><tbody id="shards-table"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="economy" class="view admin-only" aria-labelledby="economy-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Audit log</div><h1 id="economy-title">Economy activity</h1><p>Review the latest recorded economy transactions.</p></div>
+            <div class="page-actions"><button id="economy-refresh" class="button" type="button">↻ Refresh data</button></div>
+          </div>
+          <div class="summary-grid">
+            <article class="card summary-card"><div class="summary-label">Transactions loaded</div><div id="economy-count" class="summary-value">—</div><div class="summary-note">Most recent records available</div></article>
+            <article class="card summary-card"><div class="summary-label">Recent transaction volume</div><div id="economy-volume" class="summary-value">—</div><div class="summary-note">Sum of absolute transaction amounts</div></article>
+            <article class="card summary-card"><div class="summary-label">Unique actors</div><div id="economy-actors" class="summary-value">—</div><div class="summary-note">Across the records shown below</div></article>
+          </div>
+          <section class="card panel">
+            <div class="panel-heading"><div><h2>Transaction history</h2><div class="panel-subtitle">Showing up to 200 recent entries. Full history: <code>plugins/Shard/economy-transactions.csv</code>.</div></div></div>
+            <div class="table-tools"><span id="economy-table-count" class="table-count">Loading transactions…</span><input id="economy-search" class="search" type="search" placeholder="Search actor, action, or target…" aria-label="Search economy transactions"></div>
+            <div class="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th><th>Amount</th><th>Balance before</th><th>Balance after</th></tr></thead><tbody id="transactions"></tbody></table></div>
+          </section>
+        </section>
+
+        <section id="maintenance" class="view admin-only" aria-labelledby="maintenance-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">Operations</div><h1 id="maintenance-title">Maintenance</h1><p>Schedule or cancel a graceful server restart.</p></div>
+          </div>
+          <section class="card restart-card">
+            <div class="panel-heading"><div><h2>Planned restart</h2><div class="panel-subtitle">Choose a time in your local timezone. The server will show the matching time on its clock.</div></div><span class="badge">Local + server time</span></div>
+            <div class="health-row"><span>Your local time <small id="local-time-zone"></small></span><span id="local-clock" class="health-value">—</span></div>
+            <div class="health-row"><span>Server time <small id="server-time-zone"></small></span><span id="server-clock" class="health-value">—</span></div>
+            <div id="restart-state-card" class="restart-state">
+              <div class="restart-state-icon" aria-hidden="true">◷</div>
+              <div><strong id="restart-title">No restart scheduled</strong><span id="restart-description">The server will continue running normally.</span><span id="restart-countdown" class="restart-countdown"></span></div>
+            </div>
+            <div class="restart-presets" aria-label="Schedule a restart after">
+              <span>Restart in</span>
+              <button class="button" type="button" data-restart-minutes="5">5m</button>
+              <button class="button" type="button" data-restart-minutes="10">10m</button>
+              <button class="button" type="button" data-restart-minutes="25">25m</button>
+              <button class="button" type="button" data-restart-minutes="60">60m</button>
+              <div class="custom-restart-delay">
+                <label for="restart-delay-minutes">Custom minutes</label>
+                <input id="restart-delay-minutes" class="field" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 90">
+                <button id="schedule-delay" class="button primary" type="button">Schedule</button>
+              </div>
+            </div>
+            <div class="restart-form">
+              <div><label for="restart-at">Date and time</label><input id="restart-at" class="field" type="datetime-local"></div>
+              <button id="schedule" class="button primary" type="button">Schedule restart</button>
+              <button id="cancel-restart" class="button danger" type="button" disabled>Cancel restart</button>
+            </div>
+            <p class="helper">The date picker uses your browser's local timezone. The server-time preview shows the equivalent server-local time. The server host must be configured to restart the process after shutdown.</p>
+          </section>
+          <section class="card panel" style="margin-top:14px">
+            <div class="panel-heading"><div><h2>Server information</h2><div class="panel-subtitle">Live details provided by the Shard plugin.</div></div></div>
+            <div class="health-row"><span>Server version</span><span id="maintenance-version" class="health-value">—</span></div>
+            <div class="health-row"><span>Uptime</span><span id="maintenance-uptime" class="health-value">—</span></div>
+            <div class="health-row"><span>Online players</span><span id="maintenance-players" class="health-value">—</span></div>
+            <div class="health-row"><span>Loaded shards</span><span id="maintenance-shards" class="health-value">—</span></div>
+          </section>
+        </section>
+        <footer class="footer">Shard Control <span aria-hidden="true">·</span> Status updates automatically every 15 seconds.</footer>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="moderation-dialog" class="action-dialog">
+    <form id="moderation-form" method="dialog">
+      <h2 id="moderation-title">Moderation action</h2>
+      <p id="moderation-description"></p>
+      <div id="moderation-reason-field">
+        <label for="moderation-reason">Reason</label>
+        <input id="moderation-reason" class="field" type="text" maxlength="160" autocomplete="off" required>
+      </div>
+      <div class="dialog-actions">
+        <button class="button" type="submit" value="cancel" formnovalidate>Cancel</button>
+        <button id="moderation-confirm" class="button primary" type="submit" value="apply">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const loginPanel = document.querySelector('#login');
+    const dashboard = document.querySelector('#dashboard');
+    const notice = document.querySelector('#notice');
+    const logoutButton = document.querySelector('#logout');
+    const state = {
+      role: '',
+      username: '',
+      loginMode: 'staff',
+      shards: { loaded: [], available: [] },
+      worlds: [],
+      transactions: [],
+      players: [],
+      health: null,
+      permissionData: null,
+      consoleLines: [],
+      refreshInFlight: false,
+      consoleRefreshInFlight: false,
+      restartAt: 0,
+      serverTimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      serverClockOffset: 0,
+      noticeTimer: 0
+    };
+    const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        ...options,
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+      });
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        const error = new Error('The server returned an invalid response.');
+        error.status = response.status;
+        throw error;
+      }
+      if (!response.ok) {
+        const error = new Error(data.error || 'Request failed.');
+        error.status = response.status;
+        throw error;
+      }
+      return data;
+    }
+
+    function showNotice(message, isError = false) {
+      window.clearTimeout(state.noticeTimer);
+      notice.textContent = message || '';
+      notice.classList.toggle('show', Boolean(message));
+      notice.classList.toggle('error', isError);
+      if (message) state.noticeTimer = window.setTimeout(() => notice.classList.remove('show'), 6000);
+    }
+
+    function element(tag, text, className) {
+      const node = document.createElement(tag);
+      node.textContent = text;
+      if (className) node.className = className;
+      return node;
+    }
+
+    function humanTime(seconds) {
+      const days = Math.floor(seconds / 86400);
+      const hours = Math.floor((seconds % 86400) / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      if (days) return `${days}d ${hours}h`;
+      if (hours) return `${hours}h ${minutes}m`;
+      return `${minutes}m ${seconds % 60}s`;
+    }
+
+    function formatNumber(value) {
+      return numberFormat.format(Number(value) || 0);
+    }
+
+    function formatBytes(value) {
+      const bytes = Math.max(0, Number(value) || 0);
+      if (bytes < 1024) return `${formatNumber(bytes)} B`;
+      const units = ['KB', 'MB', 'GB', 'TB'];
+      let amount = bytes / 1024;
+      let unit = units[0];
+      for (let index = 1; amount >= 1024 && index < units.length; index++) {
+        amount /= 1024;
+        unit = units[index];
+      }
+      return `${amount.toFixed(2)} ${unit}`;
+    }
+
+    const adminItems = [
+      'diamond', 'iron_ingot', 'gold_ingot', 'emerald', 'netherite_ingot',
+      'diamond_sword', 'iron_sword', 'bow', 'arrow', 'shield',
+      'diamond_pickaxe', 'iron_pickaxe', 'diamond_axe', 'diamond_helmet', 'diamond_chestplate',
+      'elytra', 'golden_apple', 'enchanted_golden_apple', 'end_crystal', 'totem_of_undying',
+      'obsidian', 'oak_planks', 'torch', 'cooked_beef', 'experience_bottle'
+    ];
+    const quickCommands = [
+      { label: 'List players', command: 'list' },
+      { label: 'List plugins', command: 'plugins' },
+      { label: 'Server version', command: 'version' },
+      { label: 'Help', command: 'help' },
+      { label: 'Save worlds', command: 'save-all' },
+      { label: 'Query time', command: 'time query daytime' },
+      { label: 'Set day', command: 'time set day' },
+      { label: 'Set night', command: 'time set night' },
+      { label: 'Query weather cycle', command: 'gamerule doWeatherCycle' },
+      { label: 'Clear weather', command: 'weather clear' },
+      { label: 'Start rain', command: 'weather rain' },
+      { label: 'Start thunder', command: 'weather thunder' },
+      { label: 'Peaceful mode', command: 'difficulty peaceful' },
+      { label: 'Easy difficulty', command: 'difficulty easy' },
+      { label: 'Normal difficulty', command: 'difficulty normal' },
+      { label: 'Hard difficulty', command: 'difficulty hard' },
+      { label: 'Keep inventory on', command: 'gamerule keepInventory true' },
+      { label: 'Keep inventory off', command: 'gamerule keepInventory false' },
+      { label: 'Stop mob griefing', command: 'gamerule mobGriefing false' },
+      { label: 'Allow mob griefing', command: 'gamerule mobGriefing true' },
+      { label: 'Survival mode', command: 'gamemode survival', target: true },
+      { label: 'Creative mode', command: 'gamemode creative', target: true },
+      { label: 'Adventure mode', command: 'gamemode adventure', target: true },
+      { label: 'Spectator mode', command: 'gamemode spectator', target: true },
+      { label: 'Clear inventory', command: 'clear', target: true }
+    ];
+
+    function setupAdminCommandPanel() {
+      const itemSelect = document.querySelector('#item-name');
+      for (const item of adminItems) {
+        const option = element('option', item.replaceAll('_', ' '));
+        option.value = item;
+        itemSelect.append(option);
+      }
+      document.querySelector('#custom-item-toggle').addEventListener('click', event => {
+        const toggle = event.currentTarget;
+        const custom = toggle.getAttribute('aria-pressed') !== 'true';
+        toggle.setAttribute('aria-pressed', String(custom));
+        toggle.classList.toggle('primary', custom);
+        document.querySelector('#custom-item-field').classList.toggle('hidden', !custom);
+        if (custom) document.querySelector('#custom-item-name').focus();
+      });
+
+      const tiles = document.querySelector('#command-tiles');
+      for (const entry of quickCommands) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'button command-tile';
+        button.append(element('strong', entry.label), element('span', `/${entry.command}${entry.target ? ' <player>' : ''}`));
+        button.addEventListener('click', () => {
+          const target = document.querySelector('#item-target').value.trim();
+          if (entry.target && !isPlayerName(target)) {
+            showNotice('Enter a valid Minecraft username in Target player first.', true);
+            document.querySelector('#item-target').focus();
+            return;
+          }
+          runConsoleCommand(entry.target ? `${entry.command} ${target}` : entry.command);
+        });
+        tiles.append(button);
+      }
+    }
+
+    function isPlayerName(value) {
+      return /^[A-Za-z0-9_]{1,16}$/.test(value);
+    }
+
+    async function runConsoleCommand(command) {
+      const runButton = document.querySelector('#console-run');
+      runButton.disabled = true;
+      try {
+        await api('/api/console/command', {
+          method: 'POST',
+          body: JSON.stringify({ command })
+        });
+        showNotice(`Command sent: /${command}`);
+        await refreshConsole();
+        return true;
+      } catch (error) {
+        showNotice(error.message, true);
+        return false;
+      } finally {
+        runButton.disabled = false;
+      }
+    }
+
+    async function runItemCommand(action) {
+      const target = document.querySelector('#item-target').value.trim();
+      const customItem = document.querySelector('#custom-item-toggle').getAttribute('aria-pressed') === 'true';
+      const itemValue = customItem
+        ? document.querySelector('#custom-item-name').value.trim()
+        : `minecraft:${document.querySelector('#item-name').value}`;
+      if (!/^(?:[a-z0-9_.-]+:)?[a-z0-9_./-]+$/.test(itemValue)) {
+        showNotice('Enter a valid item ID, such as minecraft:diamond_block or modid:custom_item.', true);
+        if (customItem) document.querySelector('#custom-item-name').focus();
+        return;
+      }
+      const item = itemValue.includes(':') ? itemValue : `minecraft:${itemValue}`;
+      if (!isPlayerName(target)) {
+        showNotice('Enter a valid Minecraft username (letters, numbers, and underscores only).', true);
+        document.querySelector('#item-target').focus();
+        return;
+      }
+      const amount = Number(document.querySelector('#item-amount').value);
+      if (action === 'give' && (!Number.isInteger(amount) || amount < 1 || amount > 64)) {
+        showNotice('Give amount must be a whole number between 1 and 64.', true);
+        document.querySelector('#item-amount').focus();
+        return;
+      }
+      await runConsoleCommand(action === 'give'
+        ? `minecraft:give ${target} ${item} ${amount}`
+        : `minecraft:clear ${target} ${item}`);
+    }
+
+    function makeEmptyRow(body, message, columns) {
+      const row = document.createElement('tr');
+      const cell = element('td', message, 'table-empty');
+      cell.colSpan = columns;
+      row.append(cell);
+      body.append(row);
+    }
+
+    function renderPlayers(players) {
+      const list = document.querySelector('#player-list');
+      list.replaceChildren();
+      if (!players.length) {
+        list.append(element('div', 'No players are online right now.', 'empty-state'));
+        return;
+      }
+      for (const player of players) {
+        const chip = document.createElement('span');
+        chip.className = 'player-chip';
+        const avatar = element('span', (player.trim()[0] || '?').toUpperCase(), 'player-avatar');
+        avatar.setAttribute('aria-hidden', 'true');
+        chip.append(avatar, element('span', player));
+        list.append(chip);
+      }
+    }
+
+    function renderPlayerTools() {
+      document.querySelector('#player-tools-count').textContent = `${state.players.length} online`;
+      for (const selector of [
+        document.querySelector('#tool-target'),
+        document.querySelector('#tool-destination'),
+        document.querySelector('#tool-action-target')
+      ]) {
+        const previous = selector.value;
+        selector.replaceChildren();
+        if (!state.players.length) {
+          const option = element('option', 'No players online');
+          option.value = '';
+          selector.append(option);
+          selector.disabled = true;
+          continue;
+        }
+        selector.disabled = false;
+        for (const player of state.players) {
+          const option = element('option', player.name);
+          option.value = player.uuid;
+          selector.append(option);
+        }
+        if (state.players.some(player => player.uuid === previous)) selector.value = previous;
+      }
+      for (const button of document.querySelectorAll('#player-tools button')) {
+        button.disabled = state.players.length === 0;
+      }
+    }
+
+    async function runPlayerTool(action, value) {
+      const targetSelect = action === 'teleport-player'
+        ? document.querySelector('#tool-target')
+        : document.querySelector('#tool-action-target');
+      const target = state.players.find(player => player.uuid === targetSelect.value);
+      if (!target) {
+        showNotice('Select a player who is currently online.', true);
+        return;
+      }
+      const request = { action, target: target.uuid };
+      if (action === 'teleport-player') {
+        const destination = state.players.find(player =>
+          player.uuid === document.querySelector('#tool-destination').value);
+        if (!destination) {
+          showNotice('Select an online destination player.', true);
+          return;
+        }
+        request.destination = destination.uuid;
+      }
+      if (value) request.value = value;
+      try {
+        await api('/api/player-tools', { method: 'POST', body: JSON.stringify(request) });
+        showNotice(`${action === 'teleport-player' ? 'Teleported' : 'Applied action to'} ${target.name}.`);
+        await refresh();
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    }
+
+    function renderOnlineUsers() {
+      const body = document.querySelector('#users-table');
+      const query = document.querySelector('#player-search').value.trim().toLowerCase();
+      const filtered = state.players.filter(player => player.name.toLowerCase().includes(query));
+      body.replaceChildren();
+      document.querySelector('#online-player-count').textContent = `${state.players.length} online`;
+      document.querySelector('#user-table-count').textContent =
+        `${filtered.length} of ${state.players.length} online player${state.players.length === 1 ? '' : 's'}`;
+      if (!filtered.length) {
+        makeEmptyRow(body, state.players.length ? 'No players match your search.' : 'No players are online right now.', 6);
+        return;
+      }
+      for (const player of filtered) {
+        const row = document.createElement('tr');
+        const userCell = document.createElement('td');
+        userCell.className = 'user-cell';
+        userCell.append(element('span', player.name, 'shard-name'));
+        const role = element('span', player.role, `role-tag${player.role === 'Admin' ? ' admin' : player.role === 'Moderator' ? ' moderator' : ''}`);
+        const roleCell = document.createElement('td');
+        roleCell.append(role);
+        row.append(userCell, roleCell);
+        const worldCell = document.createElement('td');
+        worldCell.textContent = `${player.world} · ${player.gameMode}`;
+        const detailsCell = document.createElement('td');
+        detailsCell.textContent =
+          `${player.x}, ${player.y}, ${player.z} · ${Math.ceil(player.health)}/20 HP`;
+        const mutedCell = element('td', player.muted ? 'Muted' : 'Not muted',
+          `state-badge${player.muted ? ' disabled' : ''}`);
+        const actions = document.createElement('td');
+        actions.className = 'player-actions';
+        const canTarget = state.role === 'Admin' || player.role !== 'Admin';
+        if (canTarget) {
+          for (const [label, action, danger] of [
+            ['Kick', 'kick', true],
+            [player.muted ? 'Unmute' : 'Mute', player.muted ? 'unmute' : 'mute', false],
+            ['Warn', 'warn', false]
+          ]) {
+            const button = element('button', label, `button${danger ? ' danger' : ''}`);
+            button.type = 'button';
+            button.addEventListener('click', () => runModeration(action, player.name));
+            actions.append(button);
+          }
+        } else {
+          actions.append(element('span', 'Protected staff account', 'muted'));
+        }
+        row.append(worldCell, detailsCell, mutedCell, actions);
+        body.append(row);
+      }
+    }
+
+    function renderConsoleLogs() {
+      const query = document.querySelector('#console-search').value.trim().toLowerCase();
+      const filtered = state.consoleLines.filter(line => line.toLowerCase().includes(query));
+      const output = document.querySelector('#console-output');
+      output.textContent = filtered.join('\n') || 'No log lines match your filter.';
+      document.querySelector('#console-match-count').textContent =
+        `${filtered.length} of ${state.consoleLines.length} recent lines`;
+    }
+
+    async function refreshConsole() {
+      if (state.consoleRefreshInFlight || state.role !== 'Admin') return;
+      state.consoleRefreshInFlight = true;
+      try {
+        const data = await api('/api/console');
+        state.consoleLines = data.lines;
+        renderConsoleLogs();
+        const output = document.querySelector('#console-output');
+        output.scrollTop = output.scrollHeight;
+        document.querySelector('#console-updated').textContent =
+          `Updated ${new Date(data.updatedAt).toLocaleTimeString()} · ${data.lines.length} lines`;
+      } catch (error) {
+        document.querySelector('#console-output').textContent = error.message;
+        throw error;
+      } finally {
+        state.consoleRefreshInFlight = false;
+      }
+    }
+
+    function renderHealth(health) {
+      state.health = health;
+      document.querySelector('#health-java').textContent = health.javaVersion;
+      document.querySelector('#health-os').textContent = health.operatingSystem;
+      document.querySelector('#health-processors').textContent = formatNumber(health.availableProcessors);
+      document.querySelector('#health-players').textContent = formatNumber(health.onlinePlayers);
+      document.querySelector('#health-worlds').textContent = formatNumber(health.worldCount);
+      document.querySelector('#health-enabled-shards').textContent =
+        `${health.enabledShards} / ${health.loadedShards}`;
+      document.querySelector('#health-loaded-shards').textContent =
+        `${health.enabledShards} enabled · ${health.loadedShards} loaded`;
+      document.querySelector('#health-memory-used').textContent = formatBytes(health.memoryUsedBytes);
+      document.querySelector('#health-memory-allocated').textContent = formatBytes(health.memoryAllocatedBytes);
+      document.querySelector('#health-memory-max').textContent = formatBytes(health.memoryMaxBytes);
+      document.querySelector('#health-disk').textContent = formatBytes(health.freeDiskBytes);
+    }
+
+    function renderPermissions() {
+      const data = state.permissionData;
+      if (!data) return;
+      const playerSelect = document.querySelector('#permission-player');
+      const nodeSelect = document.querySelector('#permission-node');
+      const previousPlayer = playerSelect.value;
+      const previousNode = nodeSelect.value;
+      playerSelect.replaceChildren();
+      nodeSelect.replaceChildren();
+      if (!data.players.length) {
+        const option = element('option', 'No players online');
+        option.value = '';
+        playerSelect.append(option);
+        playerSelect.disabled = true;
+      } else {
+        playerSelect.disabled = false;
+        for (const player of data.players) {
+          const option = element('option', player.name);
+          option.value = player.uuid;
+          playerSelect.append(option);
+        }
+        if (data.players.some(player => player.uuid === previousPlayer)) {
+          playerSelect.value = previousPlayer;
+        }
+      }
+      if (!data.nodes.length) {
+        const option = element('option', 'No registered permission nodes');
+        option.value = '';
+        nodeSelect.append(option);
+        nodeSelect.disabled = true;
+      } else {
+        nodeSelect.disabled = false;
+        for (const node of data.nodes) {
+          const option = element('option', node);
+          option.value = node;
+          nodeSelect.append(option);
+        }
+        if (data.nodes.includes(previousNode)) nodeSelect.value = previousNode;
+      }
+      const player = data.players.find(entry => entry.uuid === playerSelect.value);
+      const permission = player && player.permissions.find(entry => entry.name === nodeSelect.value);
+      const modeSelect = document.querySelector('#permission-mode');
+      modeSelect.disabled = !permission;
+      document.querySelector('#permission-save').disabled = !permission;
+      if (permission) {
+        modeSelect.value = permission.override;
+        document.querySelector('#permission-effective').textContent =
+          `Effective now: ${permission.effective ? 'allowed' : 'not allowed'} · Saved override: ${permission.override}.`;
+      } else {
+        document.querySelector('#permission-effective').textContent =
+          'Choose an online player and a registered permission node.';
+      }
+    }
+
+    async function refreshPermissions() {
+      state.permissionData = await api('/api/permissions');
+      renderPermissions();
+    }
+
+    async function refreshConfiguration() {
+      const config = await api('/api/config');
+      document.querySelector('#config-bind-address').value = config.bindAddress;
+      document.querySelector('#config-port').value = config.port;
+      document.querySelector('#config-prefix').value = config.prefix;
+    }
+
+    function requestModeration(action, target) {
+      const dialog = document.querySelector('#moderation-dialog');
+      const reasonInput = document.querySelector('#moderation-reason');
+      const needsReason = action !== 'unmute';
+      const label = `${action[0].toUpperCase()}${action.slice(1)}`;
+      document.querySelector('#moderation-title').textContent = `${label} ${target}?`;
+      document.querySelector('#moderation-description').textContent =
+        `Confirm this ${action} action for ${target}.`;
+      document.querySelector('#moderation-reason-field').classList.toggle('hidden', !needsReason);
+      reasonInput.required = needsReason;
+      reasonInput.value = action === 'kick' ? 'Kicked by staff' : '';
+      return new Promise(resolve => {
+        dialog.addEventListener('close', () => {
+          resolve(dialog.returnValue === 'apply'
+            ? (needsReason ? reasonInput.value.trim() : 'Unmuted by staff')
+            : null);
+        }, { once: true });
+        dialog.showModal();
+      });
+    }
+
+    async function runModeration(action, target) {
+      const reason = await requestModeration(action, target);
+      if (reason === null) return;
+      if (action !== 'unmute' && !reason) {
+        showNotice('A moderation reason is required.', true);
+        return;
+      }
+      try {
+        await api('/api/moderation', {
+          method: 'POST',
+          body: JSON.stringify({ action, target, reason })
+        });
+        showNotice(`${action[0].toUpperCase()}${action.slice(1)} completed for ${target}.`);
+        const data = await api('/api/players');
+        state.players = data.players;
+        renderPlayerTools();
+        renderOnlineUsers();
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    }
+
+    function renderShards() {
+      const body = document.querySelector('#shards-table');
+      const query = document.querySelector('#shard-search').value.trim().toLowerCase();
+      const filter = document.querySelector('#shard-filter').value;
+      const filtered = state.shards.loaded.filter(shard => {
+        const matchesQuery = `${shard.name} ${shard.fileName}`.toLowerCase().includes(query);
+        const matchesState = filter === 'all' || (filter === 'enabled' ? shard.enabled : !shard.enabled);
+        return matchesQuery && matchesState;
+      });
+      body.replaceChildren();
+      document.querySelector('#shard-table-count').textContent =
+        `${filtered.length} of ${state.shards.loaded.length} loaded shard${state.shards.loaded.length === 1 ? '' : 's'}`;
+      if (!filtered.length) {
+        makeEmptyRow(body, state.shards.loaded.length ? 'No shards match your filters.' : 'No shards are currently loaded.', 4);
+        return;
+      }
+      for (const shard of filtered) {
+        const row = document.createElement('tr');
+        row.append(element('td', shard.name, 'shard-name'), element('td', shard.fileName, 'file-name'));
+        const stateCell = document.createElement('td');
+        stateCell.append(element('span', shard.enabled ? 'Enabled' : 'Disabled', `state-badge${shard.enabled ? '' : ' disabled'}`));
+        row.append(stateCell);
+        const actions = document.createElement('td');
+        actions.className = 'action-cell';
+        for (const [label, action, danger] of [
+          [shard.enabled ? 'Disable' : 'Enable', shard.enabled ? 'disable' : 'enable', false],
+          ['Reload', 'reload', false], ['Unload', 'unload', true]
+        ]) {
+          const button = element('button', label, `button${danger ? ' danger' : ''}`);
+          button.type = 'button';
+          button.addEventListener('click', () => runShardAction(action, shard.name));
+          actions.append(button);
+        }
+        row.append(actions);
+        body.append(row);
+      }
+    }
+
+    function renderAvailableShards() {
+      const select = document.querySelector('#available');
+      const previous = select.value;
+      const loadedFiles = new Set(state.shards.loaded.map(shard => shard.fileName.toLowerCase()));
+      const available = state.shards.available.filter(file => !loadedFiles.has(file.toLowerCase()));
+      select.replaceChildren();
+      if (!available.length) {
+        const option = element('option', 'No unloaded shard JARs available');
+        option.value = '';
+        select.append(option);
+        select.disabled = true;
+        document.querySelector('#load').disabled = true;
+        return;
+      }
+      select.disabled = false;
+      document.querySelector('#load').disabled = false;
+      for (const file of available) {
+        const option = element('option', file);
+        option.value = file;
+        select.append(option);
+      }
+      if (available.includes(previous)) select.value = previous;
+    }
+
+    function renderEconomy() {
+      const transactions = state.transactions;
+      const actors = new Set(transactions.map(item => item.actor).filter(Boolean));
+      const volume = transactions.reduce((sum, item) => {
+        const amount = Number(item.amount);
+        return sum + (Number.isFinite(amount) ? Math.abs(amount) : 0);
+      }, 0);
+      for (const id of ['economy-count', 'overview-transactions']) {
+        document.getElementById(id).textContent = formatNumber(transactions.length);
+      }
+      for (const id of ['economy-volume', 'overview-volume']) {
+        document.getElementById(id).textContent = formatNumber(volume);
+      }
+      for (const id of ['economy-actors', 'overview-actors']) {
+        document.getElementById(id).textContent = formatNumber(actors.size);
+      }
+      const query = document.querySelector('#economy-search').value.trim().toLowerCase();
+      const filtered = transactions.filter(transaction =>
+        [transaction.actor, transaction.action, transaction.target, transaction.amount]
+          .some(value => String(value).toLowerCase().includes(query)));
+      const body = document.querySelector('#transactions');
+      body.replaceChildren();
+      document.querySelector('#economy-table-count').textContent =
+        `${filtered.length} transaction${filtered.length === 1 ? '' : 's'} shown`;
+      if (!filtered.length) {
+        makeEmptyRow(body, transactions.length ? 'No transactions match your search.' : 'No economy transactions have been recorded yet.', 7);
+        return;
+      }
+      for (const transaction of filtered) {
+        const row = document.createElement('tr');
+        const date = new Date(transaction.timestamp);
+        const time = Number.isNaN(date.getTime()) ? transaction.timestamp : date.toLocaleString();
+        row.append(
+          element('td', time),
+          element('td', transaction.actor),
+          element('td', transaction.action, 'transaction-action'),
+          element('td', transaction.target),
+          element('td', transaction.amount),
+          element('td', transaction.balanceBefore),
+          element('td', transaction.balanceAfter)
+        );
+        body.append(row);
+      }
+    }
+
+    function renderAdminOverview() {
+      const activity = document.querySelector('#overview-activity-list');
+      activity.replaceChildren();
+      const recentTransactions = state.transactions.slice(0, 5);
+      if (!recentTransactions.length) {
+        activity.append(element('div', 'No economy transactions have been recorded yet.', 'overview-empty'));
+      } else {
+        for (const transaction of recentTransactions) {
+          const row = element('div', '', 'overview-activity-row');
+          const main = element('div', '', 'overview-activity-main');
+          main.append(
+            element('strong', `${transaction.action} · ${transaction.actor || 'Unknown actor'}`),
+            element('span', transaction.target ? `Target: ${transaction.target}` : 'No target')
+          );
+          const date = new Date(transaction.timestamp);
+          const time = Number.isNaN(date.getTime()) ? transaction.timestamp : date.toLocaleString();
+          row.append(main, element('span', `${transaction.amount} · ${time}`, 'overview-activity-meta'));
+          activity.append(row);
+        }
+      }
+
+      const shardList = document.querySelector('#overview-shard-list');
+      shardList.replaceChildren();
+      const loaded = state.shards.loaded;
+      const enabledCount = loaded.filter(shard => shard.enabled).length;
+      document.querySelector('#overview-shard-summary').textContent =
+        `${enabledCount} enabled · ${loaded.length} loaded`;
+      if (!loaded.length) {
+        shardList.append(element('div', 'No shards are currently loaded.', 'overview-empty'));
+        return;
+      }
+      for (const shard of loaded.slice(0, 5)) {
+        const row = element('div', '', 'overview-shard-row');
+        const main = element('div', '', 'overview-shard-main');
+        main.append(element('strong', shard.name), element('span', shard.fileName));
+        row.append(
+          main,
+          element('span', shard.enabled ? 'Enabled' : 'Disabled', `state-badge${shard.enabled ? '' : ' disabled'}`)
+        );
+        shardList.append(row);
+      }
+      if (loaded.length > 5) {
+        shardList.append(element('div', `${loaded.length - 5} more loaded shard${loaded.length - 5 === 1 ? '' : 's'} — view all in Shards.`, 'overview-empty'));
+      }
+    }
+
+    function renderWorlds() {
+      const list = document.querySelector('#world-list');
+      list.replaceChildren();
+      const worlds = state.worlds;
+      document.querySelector('#world-count').textContent = formatNumber(worlds.length);
+      document.querySelector('#world-player-count').textContent =
+        formatNumber(worlds.reduce((total, world) => total + world.players, 0));
+      document.querySelector('#world-weather-count').textContent =
+        formatNumber(worlds.filter(world => world.storm || world.thundering).length);
+      if (!worlds.length) {
+        list.append(element('div', 'No worlds are currently loaded.', 'card panel empty-state'));
+        return;
+      }
+
+      for (const [index, world] of worlds.entries()) {
+        const card = element('section', '', 'card world-card');
+        const heading = element('div', '', 'panel-heading');
+        const title = document.createElement('div');
+        title.append(
+          element('h2', world.name),
+          element('div', `${world.environment.replaceAll('_', ' ').toLowerCase()} · ${world.name}`, 'panel-subtitle')
+        );
+        heading.append(title, element('span', world.environment, 'badge'));
+        card.append(heading);
+
+        const weather = world.thundering ? 'Thunderstorm' : world.storm ? 'Rain' : 'Clear';
+        const details = element('div', '', 'world-details');
+        for (const [label, value] of [
+          ['Time', formatWorldTime(world.time)],
+          ['Weather', weather],
+          ['Difficulty', world.difficulty],
+          ['Players', formatNumber(world.players)],
+          ['World border', `${formatNumber(world.borderSize)} blocks`]
+        ]) {
+          const detail = element('div', '', 'world-detail');
+          detail.append(element('span', label), element('strong', value));
+          details.append(detail);
+        }
+        card.append(details);
+
+        const actions = element('div', '', 'world-actions');
+        for (const [label, action, value] of [
+          ['Day', 'time', 'day'],
+          ['Night', 'time', 'night'],
+          ['Clear', 'weather', 'clear'],
+          ['Rain', 'weather', 'rain'],
+          ['Thunder', 'weather', 'thunder']
+        ]) {
+          const button = element('button', label, 'button');
+          button.type = 'button';
+          button.addEventListener('click', () => runWorldAction(world.name, action, value));
+          actions.append(button);
+        }
+
+        const difficulty = element('div', '', 'world-difficulty');
+        const difficultyField = document.createElement('div');
+        const label = element('label', 'Set difficulty');
+        const select = document.createElement('select');
+        select.id = `world-difficulty-${index}`;
+        label.htmlFor = select.id;
+        select.setAttribute('aria-label', `Difficulty for ${world.name}`);
+        for (const level of ['PEACEFUL', 'EASY', 'NORMAL', 'HARD']) {
+          const option = element('option', level[0] + level.slice(1).toLowerCase());
+          option.value = level;
+          option.selected = world.difficulty === level;
+          select.append(option);
+        }
+        difficultyField.append(label, select);
+        const apply = element('button', 'Apply', 'button');
+        apply.type = 'button';
+        apply.addEventListener('click', () =>
+          runWorldAction(world.name, 'difficulty', select.value));
+        difficulty.append(difficultyField, apply);
+        actions.append(difficulty);
+
+        const save = element('button', 'Save world', 'button');
+        save.type = 'button';
+        save.addEventListener('click', () => runWorldAction(world.name, 'save', ''));
+        actions.append(save);
+        card.append(actions);
+        list.append(card);
+      }
+    }
+
+    function formatWorldTime(ticks) {
+      const dayTicks = (Number(ticks) + 6000) % 24000;
+      const totalMinutes = Math.floor(dayTicks * 1440 / 24000);
+      return `${String(Math.floor(totalMinutes / 60)).padStart(2, '0')}:${String(totalMinutes % 60).padStart(2, '0')}`;
+    }
+
+    async function runWorldAction(world, action, value) {
+      try {
+        await api('/api/worlds', {
+          method: 'POST',
+          body: JSON.stringify({ world, action, value })
+        });
+        showNotice(action === 'save' ? `Saved ${world}.` : `Updated ${action} for ${world}.`);
+        const data = await api('/api/worlds');
+        state.worlds = data.worlds;
+        renderWorlds();
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    }
+
+    function renderRestart(restart) {
+      state.restartAt = restart.restartAt;
+      state.serverTimeZone = restart.serverTimeZone;
+      state.serverClockOffset = restart.serverNow - Date.now();
+      const stateCard = document.querySelector('#restart-state-card');
+      updateRestartClocks();
+      const scheduled = state.restartAt > 0;
+      stateCard.classList.toggle('scheduled', scheduled);
+      document.querySelector('#restart-title').textContent = scheduled ? 'Restart scheduled' : 'No restart scheduled';
+      document.querySelector('#restart-description').textContent = scheduled
+        ? `Local: ${formatLocalTime(state.restartAt)} · Server: ${formatServerTime(state.restartAt)}`
+        : 'The server will continue running normally.';
+      document.querySelector('#health-restart').textContent = scheduled ? 'Scheduled' : 'None';
+      document.querySelector('#cancel-restart').disabled = !scheduled;
+    }
+
+    function formatLocalTime(timestamp) {
+      return new Date(timestamp).toLocaleString();
+    }
+
+    function formatServerTime(timestamp) {
+      try {
+        return new Intl.DateTimeFormat(undefined, {
+          timeZone: state.serverTimeZone,
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        }).format(timestamp);
+      } catch {
+        return new Date(timestamp).toLocaleString();
+      }
+    }
+
+    function restartCountdown(remainingMillis) {
+      if (remainingMillis <= 0) return 'Restarting now';
+      const seconds = Math.ceil(remainingMillis / 1000);
+      if (seconds < 60) return `In ${seconds}s`;
+      const minutes = Math.ceil(seconds / 60);
+      if (minutes < 60) return `In ${minutes}m`;
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      if (hours < 24) return `In ${hours}h${remainingMinutes ? ` ${remainingMinutes}m` : ''}`;
+      const days = Math.floor(hours / 24);
+      const remainingHours = hours % 24;
+      return `In ${days}d${remainingHours ? ` ${remainingHours}h` : ''}`;
+    }
+
+    function updateRestartClocks() {
+      const serverNow = Date.now() + state.serverClockOffset;
+      document.querySelector('#local-time-zone').textContent =
+        `(${Intl.DateTimeFormat().resolvedOptions().timeZone})`;
+      document.querySelector('#server-time-zone').textContent = `(${state.serverTimeZone})`;
+      document.querySelector('#local-clock').textContent = new Date().toLocaleTimeString();
+      document.querySelector('#server-clock').textContent = new Intl.DateTimeFormat(undefined, {
+        timeZone: state.serverTimeZone,
+        dateStyle: 'medium',
+        timeStyle: 'medium'
+      }).format(serverNow);
+      const countdown = document.querySelector('#restart-countdown');
+      countdown.textContent = state.restartAt > 0
+        ? restartCountdown(state.restartAt - serverNow) : '';
+    }
+
+    async function scheduleRestart(restartAt, delayMinutes = null) {
+      try {
+        await api('/api/restart', {
+          method: 'POST',
+          body: JSON.stringify(delayMinutes === null
+            ? { restartAt: new Date(restartAt).toISOString() }
+            : { delayMinutes: String(delayMinutes) })
+        });
+        showNotice('Restart scheduled.');
+        await refresh();
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    }
+
+    function configureRole(identity) {
+      state.role = identity.role;
+      state.username = identity.username;
+      const isAdmin = state.role === 'Admin';
+      for (const section of document.querySelectorAll('.admin-only')) {
+        section.classList.toggle('hidden', !isAdmin);
+      }
+      document.querySelector('#overview-title').textContent = isAdmin ? 'Admin control center' : 'Your server at a glance';
+      document.querySelector('#overview-description').textContent = isAdmin
+        ? 'Monitor server health, review activity, and manage live operations.'
+        : 'Live health and player activity in one place.';
+      document.querySelector('#current-role').textContent = `${state.username} · ${state.role}`;
+      document.querySelector('#sidebar-version').textContent = `${state.username} · ${state.role}`;
+      if (!isAdmin && document.querySelector('.view.active.admin-only')) {
+        navigate('overview');
+      }
+    }
+
+    async function refresh() {
+      if (state.refreshInFlight) return;
+      state.refreshInFlight = true;
+      const refreshButton = document.querySelector('#refresh');
+      refreshButton.disabled = true;
+      try {
+        const identity = await api('/api/session');
+        if (identity.role !== state.role || identity.username !== state.username) {
+          configureRole(identity);
+        }
+        const requests = [api('/api/status'), api('/api/players')];
+        if (state.role === 'Admin') {
+          requests.push(api('/api/shards'), api('/api/economy'), api('/api/restart'),
+            api('/api/worlds'), api('/api/health'));
+        }
+        const results = await Promise.all(requests);
+        const [status, players] = results;
+        state.players = players.players;
+        renderPlayerTools();
+        if (state.role === 'Admin') {
+          const [shards, economy, restart, worlds, health] = results.slice(2);
+          state.shards = shards;
+          state.transactions = economy.transactions;
+          state.worlds = worlds.worlds;
+          renderHealth(health);
+          renderAvailableShards();
+          renderShards();
+          renderEconomy();
+          renderAdminOverview();
+          renderWorlds();
+          renderRestart(restart);
+          document.querySelector('#shard-count').textContent = formatNumber(status.loadedShards);
+          document.querySelector('#shard-count-badge').textContent = `${status.loadedShards} loaded`;
+          document.querySelector('#shard-state').textContent =
+            `${status.enabledShards} enabled · ${status.loadedShards - status.enabledShards} disabled`;
+          document.querySelector('#health-shards').replaceChildren();
+          const shardDot = document.createElement('span');
+          shardDot.className = 'dot';
+          shardDot.setAttribute('aria-hidden', 'true');
+          document.querySelector('#health-shards').append(
+            shardDot, document.createTextNode(`${status.enabledShards} / ${status.loadedShards} enabled`)
+          );
+          document.querySelector('#maintenance-shards').textContent =
+            `${status.enabledShards} enabled of ${status.loadedShards}`;
+        }
+        const playerPercent = status.maxPlayers > 0
+          ? Math.min(100, status.onlinePlayers / status.maxPlayers * 100) : 0;
+        const memoryPercent = status.memoryMaxBytes > 0
+          ? Math.min(100, status.memoryUsedBytes / status.memoryMaxBytes * 100) : 0;
+        document.querySelector('#player-total').textContent = `${status.onlinePlayers} / ${status.maxPlayers}`;
+        document.querySelector('#player-capacity').textContent = `${Math.round(playerPercent)}% of player capacity`;
+        document.querySelector('#player-progress').style.width = `${playerPercent}%`;
+        document.querySelector('#player-progress').parentElement.setAttribute('aria-valuenow', String(Math.round(playerPercent)));
+        document.querySelector('#player-count-badge').textContent = `${status.onlinePlayers} online`;
+        renderPlayers(status.players);
+        renderOnlineUsers();
+        document.querySelector('#uptime').textContent = humanTime(status.uptimeSeconds);
+        document.querySelector('#server-version').textContent = status.serverVersion;
+        document.querySelector('#maintenance-version').textContent = status.serverVersion;
+        document.querySelector('#memory').textContent = `${(status.memoryUsedBytes / 1073741824).toFixed(2)} GB`;
+        document.querySelector('#memory-max').textContent = `${(status.memoryMaxBytes / 1073741824).toFixed(2)} GB maximum`;
+        document.querySelector('#memory-progress').style.width = `${memoryPercent}%`;
+        document.querySelector('#memory-progress').parentElement.setAttribute('aria-valuenow', String(Math.round(memoryPercent)));
+        document.querySelector('#health-memory').textContent = `${Math.round(memoryPercent)}% utilized`;
+        document.querySelector('#maintenance-uptime').textContent = humanTime(status.uptimeSeconds);
+        document.querySelector('#maintenance-players').textContent = `${status.onlinePlayers} / ${status.maxPlayers}`;
+        document.querySelector('#last-updated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+        document.querySelector('#sidebar-status').textContent = 'Server online';
+        document.querySelector('#sidebar-dot').classList.remove('offline');
+      } finally {
+        state.refreshInFlight = false;
+        refreshButton.disabled = false;
+      }
+    }
+
+    async function restoreSession() {
+      try {
+        const identity = await api('/api/session');
+        configureRole(identity);
+        loginPanel.classList.add('hidden');
+        dashboard.classList.remove('hidden');
+        await refresh();
+      } catch (error) {
+        if (error.status === 401) return;
+        document.querySelector('#login-notice').textContent =
+          `Could not restore your dashboard session: ${error.message}`;
+      }
+    }
+
+    function navigate(viewName) {
+      for (const view of document.querySelectorAll('.view')) {
+        view.classList.toggle('active', view.id === viewName);
+      }
+      for (const button of document.querySelectorAll('.nav-item')) {
+        if (button.dataset.view === viewName) button.setAttribute('aria-current', 'page');
+        else button.removeAttribute('aria-current');
+      }
+      const selected = document.querySelector(`.nav-item[data-view="${viewName}"]`);
+      document.querySelector('#breadcrumb-current').textContent = selected
+        ? selected.lastChild.textContent.trim() : 'Overview';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (viewName === 'console') {
+        refreshConsole().catch(error => showNotice(error.message, true));
+      } else if (viewName === 'permissions') {
+        refreshPermissions().catch(error => showNotice(error.message, true));
+      } else if (viewName === 'configuration') {
+        refreshConfiguration().catch(error => showNotice(error.message, true));
+      }
+    }
+
+    function setLoginMode(mode) {
+      state.loginMode = mode;
+      const staffMode = mode === 'staff';
+      document.querySelector('#staff-login-fields').classList.toggle('hidden', !staffMode);
+      document.querySelector('#owner-login-fields').classList.toggle('hidden', staffMode);
+      document.querySelector('#link-code').required = staffMode;
+      document.querySelector('#password').required = !staffMode;
+      document.querySelector('#staff-login-tab').classList.toggle('active', staffMode);
+      document.querySelector('#owner-login-tab').classList.toggle('active', !staffMode);
+      document.querySelector('#staff-login-tab').setAttribute('aria-selected', String(staffMode));
+      document.querySelector('#owner-login-tab').setAttribute('aria-selected', String(!staffMode));
+      document.querySelector('#login-notice').textContent = '';
+    }
+
+    async function runShardAction(action, name) {
+      if (action === 'unload' && !confirm(`Unload ${name}?`)) return;
+      try {
+        await api('/api/shards', { method: 'POST', body: JSON.stringify({ action, name }) });
+        showNotice(`${action[0].toUpperCase()}${action.slice(1)} completed for ${name}.`);
+        await refresh();
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    }
+
+    document.querySelector('#login-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const loginButton = event.currentTarget.querySelector('button[type="submit"]');
+      loginButton.disabled = true;
+      try {
+        const credentials = state.loginMode === 'staff'
+          ? { linkCode: document.querySelector('#link-code').value.trim() }
+          : { password: document.querySelector('#password').value };
+        const identity = await api('/api/login', {
+          method: 'POST',
+          body: JSON.stringify(credentials)
+        });
+        configureRole(identity);
+        loginPanel.classList.add('hidden');
+        dashboard.classList.remove('hidden');
+        document.querySelector('#password').value = '';
+        document.querySelector('#link-code').value = '';
+        document.querySelector('#login-notice').textContent = '';
+        try {
+          await refresh();
+        } catch (error) {
+          showNotice(`Signed in, but dashboard data could not be loaded: ${error.message}`, true);
+        }
+      } catch (error) {
+        document.querySelector('#login-notice').textContent = error.message;
+      } finally {
+        loginButton.disabled = false;
+      }
+    });
+
+    logoutButton.addEventListener('click', async () => {
+      logoutButton.disabled = true;
+      try {
+        await api('/api/logout', { method: 'POST', body: '{}' });
+        location.reload();
+      } catch (error) {
+        showNotice(error.message, true);
+        logoutButton.disabled = false;
+      }
+    });
+
+    document.querySelector('#load').addEventListener('click', async () => {
+      const name = document.querySelector('#available').value;
+      if (!name) {
+        showNotice('No unloaded shard JAR is available.', true);
+        return;
+      }
+      try {
+        await api('/api/shards', { method: 'POST', body: JSON.stringify({ action: 'load', name }) });
+        showNotice(`Loaded ${name}.`);
+        await refresh();
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+
+    document.querySelector('#reload-all').addEventListener('click', async () => {
+      if (!confirm('Reload every shard?')) return;
+      await runShardAction('reload', 'all');
+    });
+
+    document.querySelector('#schedule').addEventListener('click', async () => {
+      const value = document.querySelector('#restart-at').value;
+      if (!value) {
+        showNotice('Choose a valid restart time.', true);
+        return;
+      }
+      await scheduleRestart(new Date(value).getTime());
+    });
+
+    document.querySelectorAll('[data-restart-minutes]').forEach(button => {
+      button.addEventListener('click', () => {
+        const minutes = Number(button.dataset.restartMinutes);
+        scheduleRestart(null, minutes);
+      });
+    });
+
+    document.querySelector('#schedule-delay').addEventListener('click', () => {
+      const input = document.querySelector('#restart-delay-minutes');
+      const minutes = input.valueAsNumber;
+      if (!Number.isSafeInteger(minutes) || minutes < 1) {
+        showNotice('Enter a whole number of minutes greater than zero.', true);
+        input.focus();
+        return;
+      }
+      scheduleRestart(null, minutes);
+    });
+
+    document.querySelector('#cancel-restart').addEventListener('click', async () => {
+      if (!confirm('Cancel the planned restart?')) return;
+      try {
+        await api('/api/restart/cancel', { method: 'POST', body: '{}' });
+        showNotice('Restart cancelled.');
+        await refresh();
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+
+    document.querySelectorAll('.nav-item').forEach(button => {
+      button.addEventListener('click', () => navigate(button.dataset.view));
+    });
+    document.querySelectorAll('[data-go]').forEach(button => {
+      button.addEventListener('click', () => navigate(button.dataset.go));
+    });
+    document.querySelector('#shard-search').addEventListener('input', renderShards);
+    document.querySelector('#shard-filter').addEventListener('change', renderShards);
+    document.querySelector('#economy-search').addEventListener('input', renderEconomy);
+    document.querySelector('#refresh').addEventListener('click', async () => {
+      try {
+        await refresh();
+        showNotice('Dashboard refreshed.');
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+    document.querySelector('#economy-refresh').addEventListener('click', async () => {
+      try {
+        const economy = await api('/api/economy');
+        state.transactions = economy.transactions;
+        renderEconomy();
+        renderAdminOverview();
+        showNotice('Economy activity refreshed.');
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+    document.querySelector('#staff-login-tab').addEventListener('click', () => setLoginMode('staff'));
+    document.querySelector('#owner-login-tab').addEventListener('click', () => setLoginMode('owner'));
+    document.querySelector('#player-search').addEventListener('input', renderOnlineUsers);
+    document.querySelector('#teleport-player').addEventListener('click', () =>
+      runPlayerTool('teleport-player'));
+    document.querySelector('#teleport-spawn').addEventListener('click', () =>
+      runPlayerTool('spawn'));
+    document.querySelectorAll('[data-player-action]').forEach(button => {
+      button.addEventListener('click', () =>
+        runPlayerTool(button.dataset.playerAction, button.dataset.value));
+    });
+    document.querySelector('#console-refresh').addEventListener('click', async () => {
+      try {
+        await refreshConsole();
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+    document.querySelector('#console-search').addEventListener('input', renderConsoleLogs);
+    document.querySelector('#permissions-refresh').addEventListener('click', async () => {
+      try {
+        await refreshPermissions();
+        showNotice('Online players and permission nodes refreshed.');
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+    document.querySelector('#permission-player').addEventListener('change', renderPermissions);
+    document.querySelector('#permission-node').addEventListener('change', renderPermissions);
+    document.querySelector('#permission-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const request = {
+        uuid: document.querySelector('#permission-player').value,
+        permission: document.querySelector('#permission-node').value,
+        mode: document.querySelector('#permission-mode').value
+      };
+      try {
+        await api('/api/permissions', { method: 'POST', body: JSON.stringify(request) });
+        await refreshPermissions();
+        showNotice('Player permission override saved.');
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+    document.querySelector('#configuration-refresh').addEventListener('click', async () => {
+      try {
+        await refreshConfiguration();
+        showNotice('Configuration loaded.');
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+    document.querySelector('#configuration-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const request = {
+        bindAddress: document.querySelector('#config-bind-address').value.trim(),
+        port: document.querySelector('#config-port').value,
+        prefix: document.querySelector('#config-prefix').value
+      };
+      try {
+        await api('/api/config', { method: 'POST', body: JSON.stringify(request) });
+        await refreshConfiguration();
+        showNotice('Configuration saved. Dashboard listener changes take effect after restart.');
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+    document.querySelector('#health-refresh').addEventListener('click', async () => {
+      try {
+        renderHealth(await api('/api/health'));
+        showNotice('Server health refreshed.');
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+    document.querySelector('#worlds-refresh').addEventListener('click', async () => {
+      try {
+        const data = await api('/api/worlds');
+        state.worlds = data.worlds;
+        renderWorlds();
+        showNotice('World information refreshed.');
+      } catch (error) {
+        showNotice(error.message, true);
+      }
+    });
+    document.querySelector('#console-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const input = document.querySelector('#console-command');
+      const command = input.value.trim();
+      if (!command) return;
+      if (await runConsoleCommand(command)) input.value = '';
+    });
+
+    document.querySelector('#give-item').addEventListener('click', () => runItemCommand('give'));
+    document.querySelector('#clear-item').addEventListener('click', () => runItemCommand('clear'));
+    setupAdminCommandPanel();
+    restoreSession();
+    window.setInterval(updateRestartClocks, 1000);
+
+    window.setInterval(async () => {
+      if (dashboard.classList.contains('hidden')) return;
+      try {
+        await refresh();
+      } catch (error) {
+        if (error.status === 401) {
+          dashboard.classList.add('hidden');
+          loginPanel.classList.remove('hidden');
+          document.querySelector('#login-notice').textContent = error.message;
+        } else {
+          document.querySelector('#sidebar-status').textContent = 'Connection issue';
+          document.querySelector('#sidebar-dot').classList.add('offline');
+          showNotice(error.message, true);
+        }
+      }
+    }, 15000);
+    window.setInterval(() => {
+      if (!dashboard.classList.contains('hidden')
+          && document.querySelector('#console').classList.contains('active')) {
+        refreshConsole().catch(error => showNotice(error.message, true));
+      }
+    }, 5000);
+  </script>
+</body>
+</html>

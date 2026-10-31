@@ -1,0 +1,12 @@
+license:
+  key: "YOUR_LICENSE_KEY"
+
+messages:
+  # Prefix added to messages sent by every shard. Supports & and &#RRGGBB color codes.
+  prefix: "&8[&bShard&8] &7"
+
+dashboard:
+  # Loopback by default. Use a server IP or 0.0.0.0 to accept public connections.
+  bind-address: "127.0.0.1"
+  # Choose an unused port from 1 to 65535.
+  port: 8765

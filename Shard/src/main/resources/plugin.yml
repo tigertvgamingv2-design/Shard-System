@@ -1,0 +1,487 @@
+main: com.thronecraft.net.Shard
+version: 1.0.0-SNAPSHOT
+name: Shard
+author: Bit
+description: A modular Minecraft server plugin for loading and managing configurable server features.
+api-version: 1.21
+commands:
+  shard:
+    description: Manage Shard plugin modules
+    usage: /shard help
+    aliases: [shards]
+  welcome:
+    description: Configure the Welcome shard
+    usage: /welcome help
+  joinbroadcast:
+    description: Configure the JoinBroadcast shard
+    usage: /joinbroadcast help
+  quitbroadcast:
+    description: Configure the QuitBroadcast shard
+    usage: /quitbroadcast help
+  firstjoin:
+    description: Configure the FirstJoin shard
+    usage: /firstjoin help
+  joincoordinates:
+    description: Configure the JoinCoordinates shard
+    usage: /joincoordinates help
+  worldtime:
+    description: Configure the WorldTime shard
+    usage: /worldtime help
+  deathprefix:
+    description: Configure the DeathPrefix shard
+    usage: /deathprefix help
+  nocreepergrief:
+    description: Enable or disable the NoCreeperGrief shard
+    usage: /nocreepergrief help
+  nophantoms:
+    description: Enable or disable the NoPhantoms shard
+    usage: /nophantoms help
+  sleepnotice:
+    description: Configure the SleepNotice shard
+    usage: /sleepnotice help
+  sethome:
+    description: Save a named public or private home
+    usage: /sethome [name] [public|private] [icon]
+  home:
+    description: Teleport to one of your homes or a public home
+    usage: /home [player] <name>
+  homes:
+    description: Browse your homes or another player's public homes
+    usage: /homes [player]
+  delhome:
+    description: Delete a personal home
+    usage: /delhome <name>
+  warp:
+    description: Teleport to a public warp
+    usage: /warp <name>
+  warps:
+    description: Browse public warps, optionally by category
+    usage: /warps [category]
+  setwarp:
+    description: Create or update a categorized warp with a custom icon
+    usage: /setwarp <name> [category] [icon]
+  delwarp:
+    description: Delete a public warp
+    usage: /delwarp <name>
+  tpa:
+    description: Request to teleport to a player
+    usage: /tpa <player>
+  tpahere:
+    description: Request a player to teleport to you
+    usage: /tpahere <player>
+  tpaccept:
+    description: Accept a teleport request
+    usage: /tpaccept [player]
+  tpdeny:
+    description: Deny a teleport request
+    usage: /tpdeny [player]
+    aliases: [tpadeny]
+  tpcancel:
+    description: Cancel your outgoing teleport request
+    usage: /tpcancel
+    aliases: [tpacancel]
+  spawn:
+    description: Teleport to the server spawn
+    usage: /spawn
+  setspawn:
+    description: Set the server spawn location
+    usage: /setspawn
+  back:
+    description: Return to your previous or death location
+    usage: /back
+  atlas:
+    description: Discover and review your biome atlas
+    usage: /atlas [clear]
+  moonjournal:
+    description: Record moon phases observed through a spyglass
+    usage: /moonjournal
+  trail:
+    description: Record and replay your recent walking route
+    usage: /trail start|stop|show|clear
+  worldpulse:
+    description: View your world's shared exploration progression
+    usage: /worldpulse [status|top]
+  balance:
+    description: View a player's balance
+    usage: /balance [player]
+    permission: shard.essentials.balance
+  pay:
+    description: Pay another player
+    usage: /pay <player> <amount>
+    permission: shard.essentials.pay
+  eco:
+    description: Manage player balances
+    usage: /eco give|take|set <player> <amount>
+    permission: shard.essentials.eco
+  baltop:
+    description: View the richest players
+    usage: /baltop
+    permission: shard.essentials.baltop
+  worth:
+    description: Check the value of the item in your hand
+    usage: /worth
+    permission: shard.essentials.worth
+  sellhand:
+    description: Sell the item in your hand
+    usage: /sellhand
+    permission: shard.essentials.sellhand
+  sellall:
+    description: Sell eligible items in your inventory
+    usage: /sellall
+    permission: shard.essentials.sellall
+  paytoggle:
+    description: Toggle whether you can receive payments
+    usage: /paytoggle
+    permission: shard.essentials.paytoggle
+  kit:
+    description: Claim a kit
+    usage: /kit [name]
+    permission: shard.essentials.kit
+  createkit:
+    description: Save your inventory as a kit
+    usage: /createkit <name>
+    permission: shard.essentials.createkit
+  delkit:
+    description: Delete a kit
+    usage: /delkit <name>
+    permission: shard.essentials.delkit
+  kits:
+    description: List available kits
+    usage: /kits
+    permission: shard.essentials.kits
+  give:
+    description: Give an item to a player
+    usage: /give <player> <material> [amount]
+    permission: shard.essentials.give
+  item:
+    description: Inspect the item in your hand
+    usage: /item
+    permission: shard.essentials.item
+  more:
+    description: Refill the item stack in your hand
+    usage: /more [amount]
+    permission: shard.essentials.more
+  hat:
+    description: Wear the item in your hand as a hat
+    usage: /hat
+    permission: shard.essentials.hat
+  skull:
+    description: Get a player head
+    usage: /skull [player]
+    permission: shard.essentials.skull
+  kick:
+    description: Kick a player
+    usage: /kick <player> [reason]
+    permission: shard.essentials.kick
+  ban:
+    description: Ban a player
+    usage: /ban <player> [reason]
+    permission: shard.essentials.ban
+  unban:
+    description: Unban a player
+    usage: /unban <player>
+    permission: shard.essentials.unban
+  mute:
+    description: Mute a player
+    usage: /mute <player> [reason]
+    permission: shard.essentials.mute
+  unmute:
+    description: Unmute a player
+    usage: /unmute <player>
+    permission: shard.essentials.unmute
+  warn:
+    description: Warn a player
+    usage: /warn <player> <reason>
+    permission: shard.essentials.warn
+  warnings:
+    description: View a player's warnings
+    usage: /warnings [player]
+    permission: shard.essentials.warnings
+  invsee:
+    description: Inspect a player's inventory
+    usage: /invsee <player>
+    permission: shard.essentials.invsee
+  heal:
+    description: Restore health
+    usage: /heal [player]
+    permission: shard.essentials.heal
+  feed:
+    description: Restore hunger
+    usage: /feed [player]
+    permission: shard.essentials.feed
+  repair:
+    description: Repair damaged items
+    usage: /repair [all]
+    permission: shard.essentials.repair
+  fly:
+    description: Toggle flight
+    usage: /fly [player]
+    permission: shard.essentials.fly
+  speed:
+    description: Set movement speed
+    usage: /speed <1-10> [player]
+    permission: shard.essentials.speed
+  time:
+    description: Set world time
+    usage: /time day|night|<ticks> [world]
+    permission: shard.essentials.time
+  weather:
+    description: Set world weather
+    usage: /weather clear|rain|thunder [world]
+    permission: shard.essentials.weather
+  workbench:
+    description: Open a crafting workbench
+    usage: /workbench
+    permission: shard.essentials.workbench
+  msg:
+    description: Send a private message
+    usage: /msg <player> <message>
+    permission: shard.essentials.msg
+  reply:
+    description: Reply to your last private message
+    usage: /reply <message>
+    permission: shard.essentials.reply
+  ignore:
+    description: Ignore a player's messages
+    usage: /ignore <player|list>
+    permission: shard.essentials.ignore
+  unignore:
+    description: Stop ignoring a player
+    usage: /unignore <player>
+    permission: shard.essentials.unignore
+  mail:
+    description: Send offline mail to a player
+    usage: /mail send <player> <message>
+    permission: shard.essentials.mail
+  mailread:
+    description: Read, page through, or clear your mail
+    usage: /mailread [page|clear]
+    permission: shard.essentials.mailread
+  broadcast:
+    description: Broadcast a message to the server
+    usage: /broadcast <message>
+    permission: shard.essentials.broadcast
+  nick:
+    description: Set or reset your nickname or another player's nickname
+    usage: /nick [player] <name|off>
+    permission: shard.essentials.nick
+  vanish:
+    description: Toggle player visibility
+    usage: /vanish [player]
+    permission: shard.essentials.vanish
+  god:
+    description: Toggle damage immunity
+    usage: /god [player]
+    permission: shard.essentials.god
+  commandblock:
+    description: Toggle whether a player can run commands
+    usage: /commandblock <player> <command>
+    permission: shard.essentials.commandblock
+  antibuild:
+    description: Toggle build protection for a player
+    usage: /antibuild <player>
+    permission: shard.essentials.antibuild
+  jail:
+    description: Jail a player
+    usage: /jail <player> [reason]
+    permission: shard.essentials.jail
+  unjail:
+    description: Release a jailed player
+    usage: /unjail <player>
+    permission: shard.essentials.unjail
+  tempban:
+    description: Temporarily ban a player
+    usage: /tempban <player> <minutes> [reason]
+    permission: shard.essentials.tempban
+  tempmute:
+    description: Temporarily mute a player
+    usage: /tempmute <player> <minutes> [reason]
+    permission: shard.essentials.tempmute
+  sudo:
+    description: Make a player run an allowed command
+    usage: /sudo <player> <command>
+    permission: shard.essentials.sudo
+  antispam:
+    description: Toggle chat spam protection for a player
+    usage: /antispam <player>
+    permission: shard.essentials.antispam
+permissions:
+  shard.dashboard.admin:
+    description: Allows full dashboard access, including the console and shard controls
+    default: op
+    children:
+      shard.dashboard.moderator: true
+  shard.dashboard.moderator:
+    description: Allows dashboard access and online-player moderation
+    default: false
+  shard.admin:
+    description: Allows use of all Shard management commands
+    default: op
+  shard.homes.unlimited:
+    description: Allows a player to create unlimited homes
+    default: op
+  shard.homes.limit.10:
+    description: Allows a player to create up to ten homes
+    default: op
+  shard.homes.limit.25:
+    description: Allows a player to create up to twenty-five homes
+    default: op
+  shard.warps.admin:
+    description: Allows creating and deleting public warps
+    default: op
+  shard.spawn.admin:
+    description: Allows setting the server spawn
+    default: op
+  shard.essentials.balance:
+    description: Allows use of balance
+    default: true
+  shard.essentials.pay:
+    description: Allows use of pay
+    default: true
+  shard.essentials.eco:
+    description: Allows use of eco
+    default: op
+  shard.essentials.baltop:
+    description: Allows use of baltop
+    default: true
+  shard.essentials.worth:
+    description: Allows use of worth
+    default: true
+  shard.essentials.sellhand:
+    description: Allows use of sellhand
+    default: true
+  shard.essentials.sellall:
+    description: Allows use of sellall
+    default: true
+  shard.essentials.paytoggle:
+    description: Allows use of paytoggle
+    default: true
+  shard.essentials.kit:
+    description: Allows use of kit
+    default: true
+  shard.essentials.createkit:
+    description: Allows use of createkit
+    default: op
+  shard.essentials.delkit:
+    description: Allows use of delkit
+    default: op
+  shard.essentials.kits:
+    description: Allows use of kits
+    default: true
+  shard.essentials.give:
+    description: Allows use of give
+    default: op
+  shard.essentials.item:
+    description: Allows use of item
+    default: true
+  shard.essentials.more:
+    description: Allows use of more
+    default: op
+  shard.essentials.hat:
+    description: Allows use of hat
+    default: true
+  shard.essentials.skull:
+    description: Allows use of skull
+    default: op
+  shard.essentials.kick:
+    description: Allows use of kick
+    default: op
+  shard.essentials.ban:
+    description: Allows use of ban
+    default: op
+  shard.essentials.unban:
+    description: Allows use of unban
+    default: op
+  shard.essentials.mute:
+    description: Allows use of mute
+    default: op
+  shard.essentials.unmute:
+    description: Allows use of unmute
+    default: op
+  shard.essentials.warn:
+    description: Allows use of warn
+    default: op
+  shard.essentials.warnings:
+    description: Allows use of warnings
+    default: op
+  shard.essentials.invsee:
+    description: Allows use of invsee
+    default: op
+  shard.essentials.heal:
+    description: Allows use of heal
+    default: op
+  shard.essentials.feed:
+    description: Allows use of feed
+    default: op
+  shard.essentials.repair:
+    description: Allows use of repair
+    default: op
+  shard.essentials.fly:
+    description: Allows use of fly
+    default: op
+  shard.essentials.speed:
+    description: Allows use of speed
+    default: op
+  shard.essentials.time:
+    description: Allows use of time
+    default: op
+  shard.essentials.weather:
+    description: Allows use of weather
+    default: op
+  shard.essentials.workbench:
+    description: Allows use of workbench
+    default: true
+  shard.essentials.msg:
+    description: Allows use of msg
+    default: true
+  shard.essentials.reply:
+    description: Allows use of reply
+    default: true
+  shard.essentials.ignore:
+    description: Allows use of ignore
+    default: true
+  shard.essentials.unignore:
+    description: Allows use of unignore
+    default: true
+  shard.essentials.mail:
+    description: Allows use of mail
+    default: true
+  shard.essentials.mailread:
+    description: Allows use of mailread
+    default: true
+  shard.essentials.broadcast:
+    description: Allows use of broadcast
+    default: op
+  shard.essentials.nick:
+    description: Allows use of nick
+    default: true
+  shard.essentials.vanish:
+    description: Allows use of vanish
+    default: op
+  shard.essentials.god:
+    description: Allows use of god
+    default: op
+  shard.essentials.commandblock:
+    description: Allows use of commandblock
+    default: op
+  shard.essentials.antibuild:
+    description: Allows use of antibuild
+    default: op
+  shard.essentials.jail:
+    description: Allows use of jail
+    default: op
+  shard.essentials.unjail:
+    description: Allows use of unjail
+    default: op
+  shard.essentials.tempban:
+    description: Allows use of tempban
+    default: op
+  shard.essentials.tempmute:
+    description: Allows use of tempmute
+    default: op
+  shard.essentials.sudo:
+    description: Allows use of sudo
+    default: op
+  shard.essentials.antispam:
+    description: Allows use of antispam
+    default: op

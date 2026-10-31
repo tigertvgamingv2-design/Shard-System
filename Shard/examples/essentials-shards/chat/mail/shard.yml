@@ -1,0 +1,3 @@
+name: EssentialsMail
+main: com.thronecraft.essentials.chat.mail.MailShard
+category: chat

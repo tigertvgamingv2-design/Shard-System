@@ -1,0 +1,3 @@
+name: EssentialsAntiSpam
+main: com.thronecraft.essentials.protection.antispam.AntiSpamShard
+category: protection

@@ -1,0 +1,3 @@
+name: EssentialsBroadcast
+main: com.thronecraft.essentials.chat.broadcast.BroadcastShard
+category: chat

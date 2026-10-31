@@ -1,0 +1,2 @@
+name: CustomerGreeting
+main: com.example.customergreeting.CustomerGreetingShard

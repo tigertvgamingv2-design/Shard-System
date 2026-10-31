@@ -1,0 +1,3 @@
+name: EssentialsTempban
+main: com.thronecraft.essentials.protection.tempban.TempbanShard
+category: protection

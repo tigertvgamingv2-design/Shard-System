@@ -1,0 +1,3 @@
+name: EssentialsCommandBlock
+main: com.thronecraft.essentials.protection.commandblock.CommandBlockShard
+category: protection

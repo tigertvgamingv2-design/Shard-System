@@ -1,0 +1,3 @@
+name: EssentialsUnignore
+main: com.thronecraft.essentials.chat.unignore.UnignoreShard
+category: chat
