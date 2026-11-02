@@ -192,6 +192,22 @@
     .settings-card .button { margin-top: 14px; }
     .permission-effective { margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
     .console-output { min-height: 300px; max-height: 55vh; overflow: auto; margin: 0; padding: 14px; border: 1px solid #202b38; border-radius: 10px; color: #b7c9bd; background: #080d12; font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .console-output .log-line { display: block; min-height: 1.6em; padding: 0 8px; margin: 0 -8px; border-left: 2px solid transparent; }
+    .console-output .log-time { color: #5f7183; }
+    .console-output .log-level { font-weight: 700; }
+    .console-output .log-tag { color: #6fb7d6; font-weight: 600; }
+    .console-output .log-info .log-level { color: #5fd08f; }
+    .console-output .log-debug { color: #7f8f9d; }
+    .console-output .log-debug .log-level { color: #8a9aa8; }
+    .console-output .log-warn { color: #efd58b; background: rgba(214, 170, 60, .08); border-left-color: #d6aa3c; }
+    .console-output .log-warn .log-level { color: #f2c14e; }
+    .console-output .log-error { color: #ffb4b4; background: rgba(224, 82, 82, .1); border-left-color: #e05252; }
+    .console-output .log-error .log-level { color: #ff6b6b; }
+    .console-output .log-stack { color: #7b8794; border-left-color: #3a2f33; }
+    .console-output .log-cause { color: #e0a4a4; font-weight: 600; border-left-color: #3a2f33; }
+    .console-output .log-stack .log-frame-class { color: #94a3b0; }
+    .console-output .log-command { color: #b9a7ff; }
+    .console-output .log-match { background: rgba(255, 213, 79, .28); color: inherit; border-radius: 2px; }
     .console-form { display: flex; gap: 9px; margin-top: 12px; }
     .console-form .field { font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; }
     .command-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 9px; margin: 14px 0; }
@@ -1016,11 +1032,87 @@
       }
     }
 
+    const ANSI_ESCAPE = /\u001b\[[0-9;?]*[ -\/]*[@-~]/g;
+    const LOG_FORMATS = [
+      /^\[(\d{2}:\d{2}:\d{2}) ([A-Za-z]+)\]: ?(.*)$/,
+      /^\[(\d{2}:\d{2}:\d{2})\] \[[^\]]*?\/([A-Za-z]+)\]: ?(.*)$/
+    ];
+
+    function logLevelClass(level) {
+      switch (level.toUpperCase()) {
+        case 'ERROR': case 'SEVERE': case 'FATAL': return 'log-error';
+        case 'WARN': case 'WARNING': return 'log-warn';
+        case 'DEBUG': case 'TRACE': case 'FINE': case 'FINER': case 'FINEST': return 'log-debug';
+        default: return 'log-info';
+      }
+    }
+
+    function appendText(parent, text, className, query) {
+      const target = className ? document.createElement('span') : parent;
+      if (className) {
+        target.className = className;
+        parent.append(target);
+      }
+      const index = query ? text.toLowerCase().indexOf(query) : -1;
+      if (index < 0) {
+        target.append(document.createTextNode(text));
+        return;
+      }
+      const match = document.createElement('mark');
+      match.className = 'log-match';
+      match.textContent = text.slice(index, index + query.length);
+      target.append(document.createTextNode(text.slice(0, index)), match,
+        document.createTextNode(text.slice(index + query.length)));
+    }
+
+    function buildLogLine(rawLine, query) {
+      const line = rawLine.replace(ANSI_ESCAPE, '');
+      const element = document.createElement('span');
+      element.className = 'log-line';
+      const format = LOG_FORMATS.map(pattern => pattern.exec(line)).find(Boolean);
+      if (format) {
+        const [, time, level, rawMessage] = format;
+        element.classList.add(logLevelClass(level));
+        appendText(element, `[${time}] `, 'log-time');
+        appendText(element, `${level.toUpperCase()} `, 'log-level');
+        let message = rawMessage;
+        const tag = /^\[[^\]]+\] /.exec(message);
+        if (tag) {
+          appendText(element, tag[0], 'log-tag');
+          message = message.slice(tag[0].length);
+        }
+        const issued = /^(\S+ issued server command: )(.*)$/.exec(message);
+        if (issued) {
+          appendText(element, issued[1], null, query);
+          appendText(element, issued[2], 'log-command', query);
+        } else {
+          appendText(element, message, null, query);
+        }
+      } else if (/^\s+at\s/.test(line) || /^\s*\.\.\. \d+ (more|common frames omitted)/.test(line)) {
+        element.classList.add('log-stack');
+        appendText(element, line, null, query);
+      } else if (/^(Caused by|Suppressed):/.test(line.trim())) {
+        element.classList.add('log-cause');
+        appendText(element, line, null, query);
+      } else if (/^[\w.$]+(Exception|Error)(:|$)/.test(line)) {
+        element.classList.add('log-error');
+        appendText(element, line, null, query);
+      } else {
+        appendText(element, line, null, query);
+      }
+      return element;
+    }
+
     function renderConsoleLogs() {
       const query = document.querySelector('#console-search').value.trim().toLowerCase();
-      const filtered = state.consoleLines.filter(line => line.toLowerCase().includes(query));
+      const filtered = state.consoleLines.filter(line =>
+        line.replace(ANSI_ESCAPE, '').toLowerCase().includes(query));
       const output = document.querySelector('#console-output');
-      output.textContent = filtered.join('\n') || 'No log lines match your filter.';
+      if (filtered.length === 0) {
+        output.textContent = 'No log lines match your filter.';
+      } else {
+        output.replaceChildren(...filtered.map(line => buildLogLine(line, query)));
+      }
       document.querySelector('#console-match-count').textContent =
         `${filtered.length} of ${state.consoleLines.length} recent lines`;
     }

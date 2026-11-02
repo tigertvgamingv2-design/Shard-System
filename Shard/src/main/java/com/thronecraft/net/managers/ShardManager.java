@@ -2,6 +2,7 @@ package com.thronecraft.net.managers;
 
 import com.thronecraft.net.shards.ShardModule;
 import com.thronecraft.net.shards.ShardMessages;
+import com.thronecraft.net.utils.ConsoleLog;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -222,7 +223,8 @@ public class ShardManager {
             }
             module.onEnable(plugin);
             loadedShards.add(new LoadedShard(descriptor.name(), jar.getName(), module, classLoader));
-            plugin.getLogger().info("Loaded shard '" + descriptor.name() + "' from " + jar.getName() + ".");
+            ConsoleLog.success("Loaded shard " + ConsoleLog.highlight(descriptor.name())
+                    + " from " + ConsoleLog.highlight(jar.getName()));
         } catch (Exception | LinkageError exception) {
             if (module != null) {
                 try {

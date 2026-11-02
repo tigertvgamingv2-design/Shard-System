@@ -7,6 +7,7 @@ import com.thronecraft.net.managers.EconomyTransactionLogger;
 import com.thronecraft.net.managers.RestartPlanManager;
 import com.thronecraft.net.managers.ShardManager;
 import com.thronecraft.net.managers.ShardManager.ShardInfo;
+import com.thronecraft.net.utils.ConsoleLog;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.Difficulty;
@@ -114,10 +115,11 @@ public final class DashboardServer implements Listener {
         }
         String bindHost = bindAddress instanceof Inet6Address
                 ? "[" + bindAddress.getHostAddress() + "]" : bindAddress.getHostAddress();
-        plugin.getLogger().info("Admin dashboard listening on http://" + bindHost + ":" + port
-                + ". Password file: "
-                + plugin.getDataFolder().toPath().resolve("dashboard.password"));
-        plugin.getLogger().warning("The dashboard uses plain HTTP. Protect public access with your own "
+        ConsoleLog.success("Admin dashboard listening on "
+                + ConsoleLog.highlight("http://" + bindHost + ":" + port));
+        ConsoleLog.info("Password file: "
+                + ConsoleLog.highlight(plugin.getDataFolder().toPath().resolve("dashboard.password")));
+        ConsoleLog.warn("The dashboard uses plain HTTP. Protect public access with your own "
                 + "firewall and HTTPS reverse proxy.");
     }
 
@@ -264,6 +266,15 @@ public final class DashboardServer implements Listener {
             sendError(exchange, 400, exception.getMessage());
         } catch (IllegalStateException exception) {
             sendError(exchange, 503, exception.getMessage());
+        } catch (IOException exception) {
+            // Headers already sent means the client disconnected while the body was being written.
+            if (exchange.getResponseCode() != -1) {
+                plugin.getLogger().log(Level.FINE, "Dashboard client disconnected before the response finished.",
+                        exception);
+            } else {
+                plugin.getLogger().log(Level.SEVERE, "Dashboard request failed.", exception);
+                sendError(exchange, 500, "Request failed. Check the server log for details.");
+            }
         } catch (Exception exception) {
             plugin.getLogger().log(Level.SEVERE, "Dashboard request failed.", exception);
             sendError(exchange, 500, "Request failed. Check the server log for details.");
@@ -533,9 +544,9 @@ public final class DashboardServer implements Listener {
                     return null;
                 });
             }
-            plugin.getLogger().info("A planned restart was scheduled for "
-                    + Instant.ofEpochMilli(restartAt).atZone(ZoneId.systemDefault())
-                    + " in server timezone " + ZoneId.systemDefault() + ".");
+            ConsoleLog.info("A planned restart was scheduled for "
+                    + ConsoleLog.highlight(Instant.ofEpochMilli(restartAt).atZone(ZoneId.systemDefault()))
+                    + " in server timezone " + ConsoleLog.highlight(ZoneId.systemDefault()) + ".");
             sendJson(exchange, 200, "{\"scheduled\":true}");
             return;
         }
@@ -544,7 +555,7 @@ public final class DashboardServer implements Listener {
                 restartManager.cancel();
                 return null;
             });
-            plugin.getLogger().info("The planned restart was cancelled.");
+            ConsoleLog.info("The planned restart was cancelled.");
             sendJson(exchange, 200, "{\"cancelled\":true}");
             return;
         }
@@ -597,8 +608,9 @@ public final class DashboardServer implements Listener {
             }
             return null;
         });
-        plugin.getLogger().info("Dashboard moderation by " + session.username + ": "
-                + action + " " + targetName + " (" + reason + ").");
+        ConsoleLog.info("Dashboard moderation by " + ConsoleLog.highlight(session.username) + ": "
+                + ConsoleLog.highlight(action) + " " + ConsoleLog.highlight(targetName)
+                + " (" + ConsoleLog.highlight(reason) + ").");
         sendJson(exchange, 200, "{\"completed\":true}");
     }
 
@@ -625,8 +637,8 @@ public final class DashboardServer implements Listener {
         }
         Session session = sessionFor(exchange);
         String commandToRun = command;
-        plugin.getLogger().info("Dashboard console command requested by "
-                + session.username + ": /" + command);
+        ConsoleLog.info("Dashboard console command requested by "
+                + ConsoleLog.highlight(session.username) + ": " + ConsoleLog.highlight("/" + command));
         boolean dispatched = callOnServer(() ->
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandToRun));
         if (!dispatched) {
@@ -684,7 +696,8 @@ public final class DashboardServer implements Listener {
             }
             return null;
         });
-        plugin.getLogger().info("Dashboard performed shard action '" + action + "' for '" + name + "'.");
+        ConsoleLog.success("Dashboard performed shard action " + ConsoleLog.highlight(action)
+                + " for " + ConsoleLog.highlight(name) + ".");
         sendJson(exchange, 200, "{\"completed\":true}");
     }
 
@@ -853,8 +866,9 @@ public final class DashboardServer implements Listener {
             applyPermissionOverrides(target);
             return null;
         });
-        plugin.getLogger().info("Dashboard permission update by " + session.username + ": "
-                + node + " -> " + mode + " for " + targetId + ".");
+        ConsoleLog.info("Dashboard permission update by " + ConsoleLog.highlight(session.username) + ": "
+                + ConsoleLog.highlight(node) + " -> " + ConsoleLog.highlight(mode)
+                + " for " + ConsoleLog.highlight(targetId) + ".");
         sendJson(exchange, 200, "{\"completed\":true}");
     }
 
@@ -925,7 +939,8 @@ public final class DashboardServer implements Listener {
             plugin.saveConfig();
             return null;
         });
-        plugin.getLogger().info("Dashboard safe configuration updated by " + session.username + ".");
+        ConsoleLog.success("Dashboard safe configuration updated by "
+                + ConsoleLog.highlight(session.username) + ".");
         sendJson(exchange, 200, "{\"completed\":true}");
     }
 
@@ -1047,9 +1062,9 @@ public final class DashboardServer implements Listener {
             return null;
         });
         Session session = sessionFor(exchange);
-        plugin.getLogger().info("Dashboard world action " + action + " requested by "
-                + session.username + " for " + worldName
-                + (value.isBlank() ? "." : " (" + value + ")."));
+        ConsoleLog.info("Dashboard world action " + ConsoleLog.highlight(action) + " requested by "
+                + ConsoleLog.highlight(session.username) + " for " + ConsoleLog.highlight(worldName)
+                + (value.isBlank() ? "." : " (" + ConsoleLog.highlight(value) + ")."));
         sendJson(exchange, 200, "{\"completed\":true}");
     }
 
@@ -1103,8 +1118,9 @@ public final class DashboardServer implements Listener {
                 default -> throw new IllegalArgumentException("Unsupported player tool action.");
             }
             Session session = sessionFor(exchange);
-            plugin.getLogger().info("Dashboard player action " + action + " requested by "
-                    + session.username + " for " + target.getName() + ".");
+            ConsoleLog.info("Dashboard player action " + ConsoleLog.highlight(action) + " requested by "
+                    + ConsoleLog.highlight(session.username) + " for "
+                    + ConsoleLog.highlight(target.getName()) + ".");
             return null;
         });
         sendJson(exchange, 200, "{\"completed\":true}");
@@ -1159,8 +1175,8 @@ public final class DashboardServer implements Listener {
             if (generated.length() < 32) {
                 throw new IOException("Generated dashboard password is too short.");
             }
-            plugin.getLogger().info("Created dashboard password file: " + passwordFile);
-            plugin.getLogger().info("Read that file locally to sign in. Delete it while the server is stopped to reset the password.");
+            ConsoleLog.success("Created dashboard password file: " + ConsoleLog.highlight(passwordFile));
+            ConsoleLog.info("Read that file locally to sign in. Delete it while the server is stopped to reset the password.");
             return generated.getBytes(StandardCharsets.UTF_8);
         }
         String existing = Files.readString(passwordFile, StandardCharsets.UTF_8).trim();
@@ -1182,7 +1198,7 @@ public final class DashboardServer implements Listener {
             Files.setPosixFilePermissions(file, EnumSet.of(
                     PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
         } catch (UnsupportedOperationException ignored) {
-            plugin.getLogger().warning("Could not set POSIX permissions on the dashboard password file. "
+            ConsoleLog.warn("Could not set POSIX permissions on the dashboard password file. "
                     + "Restrict access to the Shard plugin data folder using your operating system.");
         }
     }

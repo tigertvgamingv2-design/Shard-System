@@ -7,6 +7,7 @@ import com.thronecraft.net.listeners.PlayerListener;
 import com.thronecraft.net.managers.RestartPlanManager;
 import com.thronecraft.net.managers.ShardManager;
 import com.thronecraft.net.shards.ShardMessages;
+import com.thronecraft.net.utils.ConsoleLog;
 import com.thronecraft.net.web.DashboardServer;
 
 import java.io.IOException;
@@ -32,6 +33,7 @@ public class Shard extends JavaPlugin {
             return;
         }
 
+        ConsoleLog.info("Verifying license...");
         getServer().getScheduler().runTaskAsynchronously(this, () -> {
             LicenseVerifier.VerificationResult result;
             try {
@@ -48,6 +50,9 @@ public class Shard extends JavaPlugin {
                     disableForLicenseFailure();
                     return;
                 }
+                String reason = result.reason();
+                ConsoleLog.success("License verification succeeded"
+                        + (reason == null || reason.isBlank() ? "." : ": " + reason));
                 enableLicensedFeatures();
             });
         });
@@ -80,7 +85,7 @@ public class Shard extends JavaPlugin {
         // Register listeners
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
         
-        getLogger().info(getDescription().getName() + " has been enabled!");
+        ConsoleLog.success(getDescription().getName() + " has been enabled!");
     }
 
     private void disableForLicenseFailure() {
@@ -102,7 +107,7 @@ public class Shard extends JavaPlugin {
             shardManager = null;
         }
         ShardMessages.clear(this);
-        getLogger().info(getDescription().getName() + " has been disabled!");
+        ConsoleLog.info(getDescription().getName() + " has been disabled!");
     }
     
 }

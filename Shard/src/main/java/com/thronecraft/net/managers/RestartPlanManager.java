@@ -1,6 +1,7 @@
 package com.thronecraft.net.managers;
 
 import com.thronecraft.net.shards.ShardMessages;
+import com.thronecraft.net.utils.ConsoleLog;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -33,7 +34,7 @@ public final class RestartPlanManager {
         }
         if (savedTime <= System.currentTimeMillis()) {
             clearPlan();
-            plugin.getLogger().warning("Discarded an expired saved restart plan.");
+            ConsoleLog.warn("Discarded an expired saved restart plan.");
             return;
         }
         plannedAt = savedTime;
@@ -80,7 +81,7 @@ public final class RestartPlanManager {
             plannedAt = 0;
             cancelTicker();
             clearPlan();
-            plugin.getLogger().warning("Scheduled restart time reached; requesting graceful server shutdown.");
+            ConsoleLog.warn("Scheduled restart time reached; requesting graceful server shutdown.");
             Bukkit.shutdown();
             return;
         }
